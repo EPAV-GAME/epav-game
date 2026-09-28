@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="assets/images/epav-icone.png">
   <link rel="apple-touch-icon" href="assets/images/epav-icone.png">
   <title>Fechando Negócio — EPAV</title>
-  <link rel="stylesheet" href="css/style.css?v=20260928-1">
+  <link rel="stylesheet" href="css/style.css?v=20260928-2">
 </head>
 <body>
   <main id="jogo">
@@ -25,9 +25,63 @@
           <div class="menu-atalhos">
             <button class="botao secundario" onclick="mostrarHistorico()">▦ Histórico</button>
             <button class="botao secundario" onclick="EpavRanking.abrirRanking()">★ Ranking</button>
+            <button id="botao-ajuda" class="botao secundario menu-ajuda" onclick="abrirAjuda()">? Ajuda</button>
           </div>
         </div>
         <div id="resumo-menu" class="resumo-menu" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="tela-ajuda" class="tela" aria-labelledby="titulo-ajuda">
+      <div class="ajuda-wrap">
+        <button class="botao secundario voltar" onclick="voltarDaAjuda()">← Voltar ao menu</button>
+        <div class="painel ajuda-painel">
+          <p class="sobretitulo">GUIA DO JOGADOR</p>
+          <h2 id="titulo-ajuda" tabindex="-1">Ajuda</h2>
+          <p class="ajuda-intro">Observe. Escute. Entenda. Só então ofereça.</p>
+
+          <div class="ajuda-secoes">
+            <section aria-labelledby="ajuda-objetivo">
+              <h3 id="ajuda-objetivo">Intuito do projeto</h3>
+              <p>Fechando Negócio — Missão EPAV é um jogo educativo para praticar o atendimento consultivo. A proposta é aprender a observar o contexto, ouvir o cliente, identificar suas necessidades e recomendar uma solução adequada.</p>
+              <p>Cada conversa permite experimentar decisões e aprender com o retorno do cliente e com a avaliação do atendimento.</p>
+            </section>
+
+            <section aria-labelledby="ajuda-como-jogar">
+              <h3 id="ajuda-como-jogar">Como o jogo funciona</h3>
+              <ol>
+                <li>Selecione <strong>Novo jogo</strong>, informe seu nome e escolha seu personagem.</li>
+                <li>No escritório, selecione o marcador do cliente da vez. Observe o contexto e espere a disponibilidade antes de atender.</li>
+                <li>Leia as falas e escolha a resposta que melhor atende à situação. A missão tem cinco clientes, atendidos em sequência.</li>
+                <li>Acompanhe a satisfação, os pontos, a ficha de escuta e o tempo restante. A demora reduz a satisfação; quando o tempo acaba, o cliente encerra o atendimento.</li>
+                <li>Ao concluir cada conversa, confira seus pontos fortes e o que pode melhorar. No final, veja o resultado da missão.</li>
+              </ol>
+            </section>
+
+            <section aria-labelledby="ajuda-dicas">
+              <h3 id="ajuda-dicas">Dicas para o atendimento</h3>
+              <ul>
+                <li><strong>Respeite o momento:</strong> interromper um cliente ocupado pode prejudicar a conversa.</li>
+                <li><strong>Pergunte e escute:</strong> descubra as prioridades antes de apresentar produtos.</li>
+                <li><strong>Use a ficha de escuta:</strong> os detalhes revelados pelo cliente ajudam nas próximas escolhas.</li>
+                <li><strong>Acolha as objeções:</strong> procure entender a dúvida e responder sem pressionar.</li>
+                <li><strong>Personalize a oferta:</strong> relacione a recomendação à necessidade e confirme se ela faz sentido para o cliente.</li>
+              </ul>
+            </section>
+
+            <section aria-labelledby="ajuda-orientacoes">
+              <h3 id="ajuda-orientacoes">Orientações para o jogador</h3>
+              <ul>
+                <li><strong>Controles:</strong> clique ou toque nas respostas. No teclado, use A, B, C e D ou 1, 2, 3 e 4. As setas movem o foco entre as opções.</li>
+                <li><strong>Leitura:</strong> clique no balão para completar uma fala que está aparecendo. Sem opções visíveis, Enter ou espaço também completa a fala.</li>
+                <li><strong>Continuar depois:</strong> o progresso é salvo neste navegador. Use <strong>Continuar partida</strong> no menu para retomar; uma nova partida substitui o progresso anterior.</li>
+                <li><strong>Aprender com a prática:</strong> consulte o Histórico para revisar seus resultados e tente melhorar nas próximas missões.</li>
+                <li><strong>Ranking opcional:</strong> você pode jogar sem conta. Para publicar um resultado, entre ou crie uma conta e confirme a publicação. Um novo envio substitui sua posição anterior.</li>
+              </ul>
+            </section>
+          </div>
+          <button class="botao secundario ajuda-voltar" onclick="voltarDaAjuda()">← Voltar ao menu</button>
+        </div>
       </div>
     </section>
 
@@ -256,7 +310,7 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/clientsData.js?v=20260915-1"></script>
   <script src="js/preload-images.js?v=20260928-1"></script>
-  <script src="js/game.js?v=20260928-1"></script>
+  <script src="js/game.js?v=20260928-2"></script>
   <script src="js/ranking.js?v=20260912-9"></script>
 </body>
 </html>

@@ -535,6 +535,17 @@ function atualizarIdentidadeVendedor() {
   });
 }
 
+function abrirAjuda() {
+  mostrarTela('tela-ajuda');
+  window.scrollTo(0, 0);
+  document.getElementById('titulo-ajuda').focus({ preventScroll: true });
+}
+
+function voltarDaAjuda() {
+  mostrarTela('tela-menu');
+  document.getElementById('botao-ajuda').focus({ preventScroll: true });
+}
+
 function mostrarTela(id) {
   const telaAnterior = document.querySelector('.tela.ativa')?.id;
   if (['tela-escritorio', 'tela-dialogo', 'tela-resultado'].includes(telaAnterior)

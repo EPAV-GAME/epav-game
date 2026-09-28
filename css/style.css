@@ -60,7 +60,8 @@ h1, h2, p { overflow-wrap: anywhere; }
   height: 100vh;
   height: 100dvh;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background-image: linear-gradient(90deg, rgba(18,48,74,.3), transparent 58%), url('../assets/images/tela-principal-v2.png');
 }
 #tela-personalizacao { background-image: linear-gradient(rgba(18,48,74,.28), rgba(18,48,74,.58)), url('../assets/images/tela-principal-v2.png'); }
@@ -81,7 +82,7 @@ h1, h2, p { overflow-wrap: anywhere; }
   background-image: url('../assets/images/img3.jpg');
 }
 #tela-menu.ativa, #tela-personalizacao.ativa, #tela-resultado.ativa, #tela-final.ativa { display: flex; align-items: center; }
-.menu-painel { width: min(470px, 100%); padding: clamp(28px, 5vw, 48px); }
+.menu-painel { width: min(470px, 100%); margin-block: auto; padding: clamp(28px, 5vw, 48px); }
 .marca-menu { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .marca-menu img { width: 54px; height: 48px; object-fit: contain; }
 .marca-menu .sobretitulo { margin: 0; }
@@ -91,7 +92,23 @@ h1, h2, p { overflow-wrap: anywhere; }
 .menu-acoes { display: grid; gap: 12px; margin-top: 28px; }
 .menu-atalhos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .menu-atalhos .botao { min-width: 0; padding-inline: 8px; }
+.menu-ajuda { grid-column: 1 / -1; }
 .resumo-menu { margin-top: 22px; padding-top: 16px; border-top: 2px dashed var(--ink); font-size: 13px; font-weight: 800; }
+
+/* Ajuda */
+#tela-ajuda { padding: clamp(16px, 4vw, 40px); background: radial-gradient(circle at 10% 10%, #2ba6a1, var(--navy) 55%); }
+.ajuda-wrap { width: min(960px, 100%); margin: auto; }
+.ajuda-painel { padding: clamp(20px, 4vw, 40px); }
+.ajuda-painel h2 { margin: 0; font-size: clamp(34px, 6vw, 50px); line-height: 1.1; }
+.ajuda-intro { margin: 12px 0 24px; color: var(--teal); font-size: 18px; font-weight: 900; }
+.ajuda-secoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.ajuda-secoes > section { padding-top: 16px; border-top: 2px dashed var(--ink); }
+.ajuda-secoes h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.2; }
+.ajuda-secoes p, .ajuda-secoes li { font-size: 16px; line-height: 1.6; }
+.ajuda-secoes p { margin: 0 0 12px; }
+.ajuda-secoes ol, .ajuda-secoes ul { margin: 0; padding-left: 22px; }
+.ajuda-secoes li + li { margin-top: 10px; }
+.ajuda-voltar { margin-top: 28px; }
 
 /* Personalização do vendedor */
 .personalizacao-painel { width: min(660px, 100%); margin: auto; padding: clamp(25px, 5vw, 42px); }
@@ -398,6 +415,8 @@ h1, h2, p { overflow-wrap: anywhere; }
 @keyframes zoom-saida { to { transform: scale(1.25); opacity: 0; } }
 
 @media (max-width: 700px) {
+  .ajuda-secoes { grid-template-columns: 1fr; }
+  .ajuda-voltar { width: 100%; }
   #tela-menu, #tela-personalizacao, #tela-resultado, #tela-final {
     min-height: 100dvh; padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
   }

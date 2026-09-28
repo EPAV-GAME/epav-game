@@ -236,7 +236,7 @@ h1, h2, p { overflow-wrap: anywhere; }
 .feedback-decisao.negativo { color: #7a1830; background: #ffe3e6; }
 #opcoes-resposta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-top: 8px; }
 #opcoes-resposta button { position: relative; padding: 12px 14px; border: 3px solid var(--ink); background: var(--paper); box-shadow: 4px 4px 0 var(--ink); text-align: left; font-weight: 800; line-height: 1.25; cursor: pointer; transition: .12s; }
-#opcoes-resposta button::before { content: attr(data-letra); display: inline-grid; place-items: center; width: 25px; height: 25px; margin-right: 8px; background: var(--mint); border: 2px solid var(--ink); font: 8px "Press Start 2P", monospace; }
+#opcoes-resposta button::before { content: attr(data-letra); display: inline-grid; place-items: center; width: 25px; height: 25px; margin-right: 8px; background: var(--mint); border: 2px solid var(--ink); font: 900 14px/1 Arial, sans-serif; }
 #opcoes-resposta button:hover, #opcoes-resposta button:focus-visible { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); outline: 3px solid var(--gold); }
 #opcoes-resposta button.produto::after { content: attr(data-preco); display: block; margin: 8px 0 0 36px; color: var(--teal); font: 9px "Press Start 2P", monospace; }
 .dica-teclado { margin: 10px 0 0; color: white; text-align: center; font-size: 12px; font-weight: 900; text-shadow: 0 2px 3px rgba(0,0,0,.9); }

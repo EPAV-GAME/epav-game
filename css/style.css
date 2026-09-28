@@ -110,6 +110,41 @@ h1, h2, p { overflow-wrap: anywhere; }
 .ajuda-secoes li + li { margin-top: 10px; }
 .ajuda-voltar { margin-top: 28px; }
 
+/* Introdução prática no cenário do escritório */
+#tela-tutorial { padding: clamp(16px, 3vw, 36px); background: linear-gradient(rgba(18,48,74,.45), rgba(18,48,74,.7)), center/cover url('../assets/images/escritorio-geral.png'); }
+.tutorial-wrap { width: min(1080px, 100%); margin: auto; }
+.tutorial-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.tutorial-cabecalho .sobretitulo { margin: 0; color: white; text-shadow: 2px 2px 0 var(--ink); }
+.tutorial-cabecalho .botao { min-height: 42px; font-size: 13px; }
+.tutorial-cena { display: grid; grid-template-columns: 220px minmax(0, 1fr); align-items: center; gap: 30px; }
+.tutorial-personagem { text-align: center; }
+.tutorial-personagem img { width: 200px; height: 340px; object-fit: contain; filter: drop-shadow(5px 8px 0 rgba(23,36,51,.3)); }
+.tutorial-personagem p { margin: 0; padding: 16px; font-size: 18px; font-weight: 900; }
+.tutorial-painel { padding: clamp(20px, 3vw, 34px); }
+.tutorial-progresso { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; padding: 0; list-style: none; }
+.tutorial-progresso li { padding: 6px 10px; border: 2px solid var(--ink); font-size: 13px; font-weight: 900; }
+.tutorial-progresso li[aria-current="step"] { background: var(--mint); box-shadow: 3px 3px 0 var(--ink); }
+.tutorial-painel h2 { margin: 0 0 16px; font-size: clamp(27px, 4vw, 38px); line-height: 1.1; }
+.tutorial-etapa > p { line-height: 1.5; }
+.tutorial-exemplo { margin: 20px 0; padding: 18px; border: 3px solid var(--ink); background: var(--cream); }
+.tutorial-etiqueta { display: block; margin-bottom: 12px; color: var(--teal); font: 8px/1.6 "Press Start 2P", monospace; }
+.tutorial-exemplo > strong { font-size: 22px; }
+.tutorial-exemplo p { margin: 10px 0 16px; line-height: 1.5; }
+.tutorial-fala p { margin-bottom: 0; font-size: 20px; font-weight: 800; }
+.tutorial-respostas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tutorial-respostas .botao { text-align: left; text-transform: none; letter-spacing: 0; }
+.tutorial-feedback { padding: 14px; border: 2px solid #17603c; background: #e5f6ee; color: #17603c; font-weight: 800; line-height: 1.5; }
+.tutorial-feedback.revisar { border-color: #805610; background: #fff0c9; color: #805610; }
+.tutorial-indicadores { display: grid; gap: 12px; margin: 20px 0; }
+.tutorial-indicadores > div { padding-left: 14px; border-left: 4px solid var(--teal); }
+.tutorial-indicadores dt { font-weight: 900; }
+.tutorial-indicadores dd { margin: 4px 0 0; line-height: 1.5; }
+.tutorial-controles { font-size: 14px; }
+.tutorial-nota { margin: 22px 0 16px; padding-top: 14px; border-top: 2px dashed var(--ink); font-size: 13px; }
+.tutorial-acoes { display: grid; grid-template-columns: auto 1fr; gap: 12px; }
+#tela-tutorial .botao:disabled { opacity: .55; cursor: default; transform: none; box-shadow: none; }
+#tela-tutorial [hidden] { display: none; }
+
 /* Personalização do vendedor */
 .personalizacao-painel { width: min(660px, 100%); margin: auto; padding: clamp(25px, 5vw, 42px); }
 .personalizacao-painel h2 { margin: 0; font-size: clamp(31px, 5vw, 50px); line-height: 1; }
@@ -415,6 +450,15 @@ h1, h2, p { overflow-wrap: anywhere; }
 @keyframes zoom-saida { to { transform: scale(1.25); opacity: 0; } }
 
 @media (max-width: 700px) {
+  .tutorial-cabecalho { align-items: flex-start; }
+  .tutorial-cabecalho .sobretitulo { max-width: 19ch; font-size: 8px; }
+  .tutorial-cabecalho .botao { flex: 0 0 auto; padding: 8px; font-size: 11px; }
+  .tutorial-cena { grid-template-columns: 1fr; gap: 18px; }
+  .tutorial-personagem { display: flex; align-items: center; gap: 12px; }
+  .tutorial-personagem img { width: 70px; height: 112px; }
+  .tutorial-personagem p { flex: 1; font-size: 16px; text-align: left; }
+  .tutorial-respostas { grid-template-columns: 1fr; }
+  .tutorial-acoes { grid-template-columns: 1fr; }
   .ajuda-secoes { grid-template-columns: 1fr; }
   .ajuda-voltar { width: 100%; }
   #tela-menu, #tela-personalizacao, #tela-resultado, #tela-final {

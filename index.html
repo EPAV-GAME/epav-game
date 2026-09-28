@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="assets/images/epav-icone.png">
   <link rel="apple-touch-icon" href="assets/images/epav-icone.png">
   <title>Fechando Negócio — EPAV</title>
-  <link rel="stylesheet" href="css/style.css?v=20260928-2">
+  <link rel="stylesheet" href="css/style.css?v=20260928-3">
 </head>
 <body>
   <main id="jogo">
@@ -50,7 +50,7 @@
             <section aria-labelledby="ajuda-como-jogar">
               <h3 id="ajuda-como-jogar">Como o jogo funciona</h3>
               <ol>
-                <li>Selecione <strong>Novo jogo</strong>, informe seu nome e escolha seu personagem.</li>
+                <li>Selecione <strong>Novo jogo</strong>, informe seu nome e escolha seu personagem. Uma introdução prática prepara você para o primeiro atendimento.</li>
                 <li>No escritório, selecione o marcador do cliente da vez. Observe o contexto e espere a disponibilidade antes de atender.</li>
                 <li>Leia as falas e escolha a resposta que melhor atende à situação. A missão tem cinco clientes, atendidos em sequência.</li>
                 <li>Acompanhe a satisfação, os pontos, a ficha de escuta e o tempo restante. A demora reduz a satisfação; quando o tempo acaba, o cliente encerra o atendimento.</li>
@@ -116,9 +116,72 @@
 
         <div class="personalizacao-acoes">
           <button type="button" class="botao secundario" onclick="mostrarTela('tela-menu')">← Voltar</button>
-          <button type="submit" class="botao primario">Começar missão ▶</button>
+          <button type="submit" class="botao primario">Continuar ▶</button>
         </div>
       </form>
+    </section>
+
+    <section id="tela-tutorial" class="tela" aria-labelledby="titulo-tutorial">
+      <div class="tutorial-wrap">
+        <header class="tutorial-cabecalho">
+          <p class="sobretitulo">ANTES DO PRIMEIRO ATENDIMENTO</p>
+          <button class="botao secundario" onclick="concluirTutorial()">Pular introdução</button>
+        </header>
+        <div class="tutorial-cena">
+          <aside class="tutorial-personagem" aria-label="Seu personagem">
+            <img id="tutorial-vendedor" src="assets/images/vendedor-parado.png" alt="Vendedor EPAV">
+            <p class="painel" id="tutorial-boas-vindas"></p>
+          </aside>
+          <div class="painel tutorial-painel">
+            <ol class="tutorial-progresso" aria-label="Etapas da introdução">
+              <li aria-current="step">1. Observe</li>
+              <li>2. Escute</li>
+              <li>3. Atenda</li>
+            </ol>
+            <h2 id="titulo-tutorial" tabindex="-1">Observe antes de abordar</h2>
+
+            <div class="tutorial-etapa" data-etapa="0">
+              <p>Sua missão é atender cinco clientes e encontrar uma solução para cada um. Primeiro, perceba se é um bom momento para conversar.</p>
+              <div class="tutorial-exemplo">
+                <span class="tutorial-etiqueta">EXEMPLO NO ESCRITÓRIO</span>
+                <strong>Cliente ao telefone</strong>
+                <p id="tutorial-contexto">O cliente está ocupado. No jogo, selecione seu marcador para conhecer o contexto antes de iniciar a conversa.</p>
+                <button id="tutorial-observar" class="botao secundario" onclick="observarNoTutorial()">Observar contexto</button>
+              </div>
+              <p id="tutorial-feedback-observacao" class="tutorial-feedback" role="status" hidden>Boa leitura! Aguarde o cliente ficar disponível e use “Atender agora”. Respeitar esse momento ajuda a começar bem a conversa.</p>
+            </div>
+
+            <div class="tutorial-etapa" data-etapa="1" hidden>
+              <p>Durante a conversa, escolha uma resposta que ajude a entender a necessidade. Experimente abaixo:</p>
+              <div class="tutorial-exemplo tutorial-fala">
+                <span class="tutorial-etiqueta">CLIENTE · EXEMPLO DE CONVERSA</span>
+                <p>“Quero algo prático. Vou chegar em casa cansada.”</p>
+              </div>
+              <div class="tutorial-respostas">
+                <button class="botao secundario" onclick="responderNoTutorial(false)">Compre uma quantidade maior.</button>
+                <button class="botao secundario" onclick="responderNoTutorial(true)">O que facilitaria sua rotina quando chegar em casa?</button>
+              </div>
+              <p id="tutorial-feedback-resposta" class="tutorial-feedback" role="status" hidden></p>
+            </div>
+
+            <div class="tutorial-etapa" data-etapa="2" hidden>
+              <p>Agora você pode começar a missão. Observe o contexto, escute com atenção e só então recomende uma solução.</p>
+              <dl class="tutorial-indicadores">
+                <div><dt>Satisfação e pontos</dt><dd>Suas escolhas influenciam a confiança do cliente e o resultado do atendimento.</dd></div>
+                <div><dt>Ficha de escuta</dt><dd>Guarda as necessidades descobertas para ajudar nas próximas respostas.</dd></div>
+                <div><dt>Tempo restante</dt><dd>Leia com atenção e avance com objetividade. Quando o tempo acaba, o cliente encerra a conversa.</dd></div>
+              </dl>
+              <p class="tutorial-controles">Clique ou toque nas opções. No atendimento, você também pode usar A–D ou 1–4; as setas movem o foco. Clique no balão para completar a fala.</p>
+            </div>
+
+            <p class="tutorial-nota">Treino sem pontuação e sem cronômetro. A missão começa quando você sair desta introdução.</p>
+            <footer class="tutorial-acoes">
+              <button id="tutorial-voltar" class="botao secundario" onclick="voltarEtapaTutorial()" disabled>← Voltar</button>
+              <button id="tutorial-avancar" class="botao primario" onclick="avancarTutorial()" disabled>Continuar ▶</button>
+            </footer>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="tela-escritorio" class="tela" aria-label="Escritório">
@@ -310,7 +373,7 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/clientsData.js?v=20260915-1"></script>
   <script src="js/preload-images.js?v=20260928-1"></script>
-  <script src="js/game.js?v=20260928-2"></script>
+  <script src="js/game.js?v=20260928-3"></script>
   <script src="js/ranking.js?v=20260912-9"></script>
 </body>
 </html>

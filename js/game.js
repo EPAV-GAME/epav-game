@@ -35,6 +35,7 @@ const estado = {
 const CHAVE_PROGRESSO = 'progressoEpavV5';
 const CHAVES_PROGRESSO_ANTIGAS = ['progressoEpavV4', 'progressoEpavV3'];
 const CHAVE_PERFIL = 'perfilVendedorEpav';
+const tutorial = { etapa: 0, observou: false, respondeu: false, perfil: null };
 let temporizadoresCutscene = [];
 let temporizadorDigitacao = null;
 let elementoDigitacao = null;
@@ -517,9 +518,83 @@ function confirmarPersonalizacao(evento) {
   }
   campoNome.setCustomValidity('');
   const sexoSelecionado = document.querySelector('input[name="sexo-vendedor"]:checked')?.value;
-  estado.nomeVendedor = nome;
-  estado.sexoVendedor = sexoSelecionado === 'feminino' ? 'feminino' : 'masculino';
-  localStorage.setItem(CHAVE_PERFIL, JSON.stringify({ nomeVendedor: estado.nomeVendedor, sexoVendedor: estado.sexoVendedor }));
+  const perfil = { nomeVendedor: nome, sexoVendedor: sexoSelecionado === 'feminino' ? 'feminino' : 'masculino' };
+  localStorage.setItem(CHAVE_PERFIL, JSON.stringify(perfil));
+  abrirTutorial(perfil);
+}
+
+function abrirTutorial(perfil) {
+  Object.assign(tutorial, { etapa: 0, observou: false, respondeu: false, perfil });
+  const personagem = document.getElementById('tutorial-vendedor');
+  personagem.src = `assets/images/${perfil.sexoVendedor === 'feminino' ? 'vendedora-parada' : 'vendedor-parado'}.png`;
+  personagem.alt = `${perfil.nomeVendedor}, seu personagem EPAV`;
+  document.getElementById('tutorial-boas-vindas').textContent = `${perfil.nomeVendedor}, vamos praticar antes de atender?`;
+  document.getElementById('tutorial-feedback-observacao').hidden = true;
+  document.getElementById('tutorial-feedback-resposta').hidden = true;
+  document.getElementById('tutorial-observar').disabled = false;
+  document.getElementById('tutorial-observar').textContent = 'Observar contexto';
+  mostrarTela('tela-tutorial');
+  atualizarTutorial();
+}
+
+function atualizarTutorial() {
+  const titulos = ['Observe antes de abordar', 'Escute antes de oferecer', 'Comece seu primeiro atendimento'];
+  document.querySelectorAll('.tutorial-etapa').forEach(etapa => {
+    etapa.hidden = Number(etapa.dataset.etapa) !== tutorial.etapa;
+  });
+  document.querySelectorAll('.tutorial-progresso li').forEach((item, indice) => {
+    if (indice === tutorial.etapa) item.setAttribute('aria-current', 'step');
+    else item.removeAttribute('aria-current');
+  });
+  const titulo = document.getElementById('titulo-tutorial');
+  titulo.textContent = titulos[tutorial.etapa];
+  document.getElementById('tutorial-voltar').disabled = tutorial.etapa === 0;
+  const avancar = document.getElementById('tutorial-avancar');
+  avancar.disabled = tutorial.etapa === 0 ? !tutorial.observou : tutorial.etapa === 1 ? !tutorial.respondeu : false;
+  avancar.textContent = tutorial.etapa === 2 ? 'Começar missão ▶' : 'Continuar ▶';
+  window.scrollTo(0, 0);
+  titulo.focus({ preventScroll: true });
+}
+
+function observarNoTutorial() {
+  tutorial.observou = true;
+  const botao = document.getElementById('tutorial-observar');
+  botao.disabled = true;
+  botao.textContent = '✓ Contexto observado';
+  document.getElementById('tutorial-feedback-observacao').hidden = false;
+  document.getElementById('tutorial-avancar').disabled = false;
+  document.getElementById('tutorial-avancar').focus({ preventScroll: true });
+}
+
+function responderNoTutorial(adequada) {
+  const feedback = document.getElementById('tutorial-feedback-resposta');
+  feedback.hidden = false;
+  feedback.classList.toggle('revisar', !adequada);
+  feedback.textContent = adequada
+    ? 'Boa escolha! A pergunta ajuda a entender a rotina. No jogo, use o que descobrir para personalizar a oferta e consulte a ficha de escuta.'
+    : 'Oferecer mais quantidade ainda não esclarece a necessidade. Tente perguntar o que tornaria a rotina mais prática.';
+  tutorial.respondeu = adequada;
+  document.getElementById('tutorial-avancar').disabled = !adequada;
+}
+
+function avancarTutorial() {
+  if (!document.getElementById('tela-tutorial').classList.contains('ativa')) return;
+  if ((tutorial.etapa === 0 && !tutorial.observou) || (tutorial.etapa === 1 && !tutorial.respondeu)) return;
+  if (tutorial.etapa === 2) return concluirTutorial();
+  tutorial.etapa += 1;
+  atualizarTutorial();
+}
+
+function voltarEtapaTutorial() {
+  if (tutorial.etapa === 0) return;
+  tutorial.etapa -= 1;
+  atualizarTutorial();
+}
+
+function concluirTutorial() {
+  if (!document.getElementById('tela-tutorial').classList.contains('ativa') || !tutorial.perfil) return;
+  Object.assign(estado, tutorial.perfil);
+  tutorial.perfil = null;
   iniciarJogo();
 }
 

@@ -391,8 +391,7 @@ function imagemCliente(cliente, reacao = 'neutra') {
 
 function precarregarReacoesCliente(cliente) {
   Object.values(cliente.reacoes || {}).forEach(arquivo => {
-    const imagem = new Image();
-    imagem.src = `assets/images/${arquivo}`;
+    window.EpavImagens.carregar(`assets/images/${arquivo}`);
   });
 }
 

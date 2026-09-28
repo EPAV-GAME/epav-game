@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="assets/images/epav-icone.png">
   <link rel="apple-touch-icon" href="assets/images/epav-icone.png">
   <title>Fechando Negócio — EPAV</title>
-  <link rel="stylesheet" href="css/style.css?v=20260928-3">
+  <link rel="stylesheet" href="css/style.css?v=20260928-4">
 </head>
 <body>
   <main id="jogo">
@@ -75,6 +75,7 @@
                 <li><strong>Controles:</strong> clique ou toque nas respostas. No teclado, use A, B, C e D ou 1, 2, 3 e 4. As setas movem o foco entre as opções.</li>
                 <li><strong>Leitura:</strong> clique no balão para completar uma fala que está aparecendo. Sem opções visíveis, Enter ou espaço também completa a fala.</li>
                 <li><strong>Continuar depois:</strong> o progresso é salvo neste navegador. Use <strong>Continuar partida</strong> no menu para retomar; uma nova partida substitui o progresso anterior.</li>
+                <li><strong>Pausa:</strong> use o botão de pausa ou Escape durante a partida. Os cronômetros e a conversa param até você selecionar <strong>Retomar partida</strong> ou pressionar Escape novamente.</li>
                 <li><strong>Aprender com a prática:</strong> consulte o Histórico para revisar seus resultados e tente melhorar nas próximas missões.</li>
                 <li><strong>Ranking opcional:</strong> você pode jogar sem conta. Para publicar um resultado, entre ou crie uma conta e confirme a publicação. Um novo envio substitui sua posição anterior.</li>
               </ul>
@@ -171,7 +172,7 @@
                 <div><dt>Ficha de escuta</dt><dd>Guarda as necessidades descobertas para ajudar nas próximas respostas.</dd></div>
                 <div><dt>Tempo restante</dt><dd>Leia com atenção e avance com objetividade. Quando o tempo acaba, o cliente encerra a conversa.</dd></div>
               </dl>
-              <p class="tutorial-controles">Clique ou toque nas opções. No atendimento, você também pode usar A–D ou 1–4; as setas movem o foco. Clique no balão para completar a fala.</p>
+              <p class="tutorial-controles">Clique ou toque nas opções. No atendimento, você também pode usar A–D ou 1–4; as setas movem o foco. Clique no balão para completar a fala. Use o botão de pausa ou Escape para parar e retomar a partida.</p>
             </div>
 
             <p class="tutorial-nota">Treino sem pontuação e sem cronômetro. A missão começa quando você sair desta introdução.</p>
@@ -191,6 +192,7 @@
           <div class="hud-progresso"><small id="rotulo-progresso-escritorio">CLIENTE 1/5</small><strong id="progresso-escritorio">0/5</strong><span class="trilho-progresso"><span id="barra-progresso-escritorio"></span></span></div>
           <div><small>PONTOS</small><strong id="pontos-escritorio">0000</strong></div>
           <div class="hud-tempo"><small>TEMPO TOTAL</small><strong id="tempo-jogo-escritorio" role="timer" aria-label="Tempo total da partida">00:00</strong></div>
+          <button class="botao-icone botao-pausa" onclick="pausarJogo()" aria-label="Pausar partida" title="Pausar partida (Escape)">Ⅱ</button>
         </header>
         <div class="dica-observacao"><span>!</span> Observe o contexto antes de abordar.</div>
         <img id="vendedor-sprite" src="assets/images/vendedor-parado.png" alt="Vendedor EPAV com braçadeira azul">
@@ -201,7 +203,10 @@
     <section id="tela-dialogo" class="tela" aria-label="Atendimento">
       <div id="cenario-dialogo">
         <header class="hud-dialogo">
-          <button class="botao-icone" onclick="confirmarSaida()" aria-label="Voltar ao menu">×</button>
+          <div class="controles-dialogo">
+            <button class="botao-icone" onclick="confirmarSaida()" aria-label="Voltar ao menu">×</button>
+            <button class="botao-icone botao-pausa" onclick="pausarJogo()" aria-label="Pausar partida" title="Pausar partida (Escape)">Ⅱ</button>
+          </div>
           <div class="medidor">
             <span id="emoji-satisfacao">😐</span>
             <div><small>SATISFAÇÃO</small><div id="barra-satisfacao"><div id="barra-satisfacao-preenchimento"></div></div></div>
@@ -257,7 +262,10 @@
           <p><small>SATISFAÇÃO</small><strong id="resumo-atendimento"></strong></p>
         </div>
         <div id="licao-atendimento" class="licao"></div>
-        <button class="botao primario" onclick="continuarAposResultado()">Continuar ▶</button>
+        <div class="resultado-acoes">
+          <button class="botao primario" onclick="continuarAposResultado()">Continuar ▶</button>
+          <button class="botao secundario" onclick="pausarJogo()">Ⅱ Pausar</button>
+        </div>
       </div>
     </section>
 
@@ -270,6 +278,7 @@
         <img id="cutscene-vendedor" src="assets/images/vendedor-comemorando.png" alt="Vendedor EPAV">
         <div id="cutscene-fala" class="cutscene-fala" aria-live="polite"></div>
         <button id="cutscene-continuar" class="botao primario" onclick="encerrarCutscene()">Ver resultado ▶</button>
+        <button class="botao secundario" onclick="pausarJogo()">Ⅱ Pausar</button>
       </div>
     </section>
 
@@ -330,6 +339,16 @@
     </section>
   </main>
 
+  <div id="modal-pausa" class="modal" hidden>
+    <div class="modal-caixa painel-pixel pausa-caixa" role="dialog" aria-modal="true" aria-labelledby="pausa-titulo" aria-describedby="pausa-texto">
+      <p class="sobretitulo">MISSÃO EPAV</p>
+      <h2 id="pausa-titulo">Partida pausada</h2>
+      <p id="pausa-texto">O tempo e as ações do jogo estão parados. Retome para continuar de onde você parou.</p>
+      <button id="botao-retomar" class="botao primario" onclick="retomarJogo()">▶ Retomar partida</button>
+      <p class="pausa-atalho">Você também pode pressionar Escape para retomar.</p>
+    </div>
+  </div>
+
   <div id="modal-conta" class="modal" hidden>
     <div class="modal-caixa painel-pixel conta-caixa" role="dialog" aria-modal="true" aria-labelledby="conta-titulo">
       <button id="conta-fechar" type="button" class="botao-icone conta-fechar" onclick="EpavRanking.fecharConta()" aria-label="Fechar">×</button>
@@ -373,7 +392,7 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/clientsData.js?v=20260915-1"></script>
   <script src="js/preload-images.js?v=20260928-1"></script>
-  <script src="js/game.js?v=20260928-3"></script>
+  <script src="js/game.js?v=20260928-4"></script>
   <script src="js/ranking.js?v=20260912-9"></script>
 </body>
 </html>

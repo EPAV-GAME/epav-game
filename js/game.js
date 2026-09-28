@@ -48,6 +48,80 @@ let intervaloTempoJogo = null;
 let partidaConcluida = false;
 let inicioTrechoAtendimentoMs = null;
 let intervaloTempoAtendimento = null;
+let jogoPausado = false;
+let focoAntesDaPausa = null;
+let animacoesPausadas = [];
+const acoesPartida = new Set();
+
+function programarAcao(acao) {
+  if (jogoPausado) return;
+  acao.inicio = performance.now();
+  acao.id = setTimeout(() => {
+    acao.id = null;
+    if (!acao.intervalo) acoesPartida.delete(acao);
+    acao.executar();
+    if (acao.intervalo && acoesPartida.has(acao)) {
+      acao.restante = acao.intervalo;
+      programarAcao(acao);
+    }
+  }, acao.restante);
+}
+
+function agendarAcao(executar, espera = 0, intervalo = 0) {
+  const acao = { executar, restante: espera, intervalo, inicio: null, id: null };
+  acoesPartida.add(acao);
+  programarAcao(acao);
+  return acao;
+}
+
+function repetirAcao(executar, intervalo) {
+  return agendarAcao(executar, intervalo, intervalo);
+}
+
+function cancelarAcao(acao) {
+  if (!acao) return;
+  clearTimeout(acao.id);
+  acoesPartida.delete(acao);
+}
+
+function pausarJogo() {
+  const tela = document.querySelector('.tela.ativa')?.id;
+  if (jogoPausado || !['tela-escritorio', 'tela-dialogo', 'tela-resultado', 'tela-cutscene'].includes(tela)
+      || !document.getElementById('modal').hidden || !document.getElementById('modal-conta').hidden) return;
+  pausarTempoJogo();
+  pausarTempoAtendimento();
+  jogoPausado = true;
+  const agora = performance.now();
+  acoesPartida.forEach(acao => {
+    if (acao.id === null) return;
+    clearTimeout(acao.id);
+    acao.restante = Math.max(0, acao.restante - (agora - acao.inicio));
+    acao.id = null;
+  });
+  animacoesPausadas = document.getElementById('jogo').getAnimations({ subtree: true })
+    .filter(animacao => animacao.playState === 'running' || animacao.pending);
+  animacoesPausadas.forEach(animacao => animacao.pause());
+  focoAntesDaPausa = document.activeElement;
+  document.getElementById('jogo').inert = true;
+  document.getElementById('modal-pausa').hidden = false;
+  document.getElementById('botao-retomar').focus();
+  salvarProgresso();
+}
+
+function retomarJogo() {
+  if (!jogoPausado) return;
+  document.getElementById('modal-pausa').hidden = true;
+  document.getElementById('jogo').inert = false;
+  jogoPausado = false;
+  animacoesPausadas.forEach(animacao => animacao.play());
+  animacoesPausadas = [];
+  acoesPartida.forEach(programarAcao);
+  sincronizarCronometro();
+  const foco = focoAntesDaPausa?.isConnected && !focoAntesDaPausa.disabled
+    && focoAntesDaPausa.matches('button, [tabindex]') ? focoAntesDaPausa
+    : document.querySelector('.tela.ativa button[onclick="pausarJogo()"]');
+  foco?.focus({ preventScroll: true });
+}
 
 const INICIO_DEMORA_PERCENTUAL = 0.6;
 const INTERVALO_PENALIDADE_DEMORA_MS = 20000;
@@ -74,7 +148,7 @@ function atualizarTempoEscritorio() {
 function sincronizarCronometro() {
   const tela = document.querySelector('.tela.ativa')?.id;
   const jogando = ['tela-escritorio', 'tela-dialogo', 'tela-resultado'].includes(tela)
-    && !document.hidden && document.getElementById('modal').hidden && !partidaConcluida;
+    && !document.hidden && document.getElementById('modal').hidden && !partidaConcluida && !jogoPausado;
   if (jogando && inicioTrechoJogoMs === null) inicioTrechoJogoMs = performance.now();
   if (jogando && intervaloTempoJogo === null) {
     intervaloTempoJogo = setInterval(atualizarTempoEscritorio, 250);
@@ -125,7 +199,8 @@ function deveContarTempoAtendimento() {
     && !document.hidden
     && document.getElementById('modal').hidden
     && Boolean(estado.clienteAtual)
-    && !estado.atendimentoExpulso;
+    && !estado.atendimentoExpulso
+    && !jogoPausado;
 }
 
 function sincronizarTempoAtendimento() {
@@ -185,7 +260,7 @@ function expulsarAtendimentoPorDemora() {
   estado.erros += 1;
   estado.ultimaQualidade = 'muitoRuim';
   cancelarDigitacao();
-  clearTimeout(temporizadorAvancoDialogo);
+  cancelarAcao(temporizadorAvancoDialogo);
   document.getElementById('opcoes-resposta').hidden = true;
   document.getElementById('balao-vendedor').hidden = true;
   document.getElementById('nome-falante').textContent = cliente.nome.toUpperCase();
@@ -197,7 +272,7 @@ function expulsarAtendimentoPorDemora() {
   document.getElementById('pontos-dialogo').textContent = '0';
   exibirFeedbackDecisao(-10, 'Tempo esgotado: o cliente encerrou o atendimento por demora.', 'ATENDIMENTO');
   salvarProgresso();
-  setTimeout(() => finalizarAtendimento(true), 1700);
+  agendarAcao(() => finalizarAtendimento(true), 1700);
 }
 
 const nomesCategorias = {
@@ -239,13 +314,13 @@ function mostrarInsightDescoberta(texto) {
   const insight = document.getElementById('insight-descoberta');
   const rotulo = document.getElementById('texto-insight-descoberta');
   if (!insight || !rotulo) return;
-  clearTimeout(temporizadorInsight);
+  cancelarAcao(temporizadorInsight);
   rotulo.textContent = texto;
   insight.hidden = false;
   insight.classList.remove('ativo');
   void insight.offsetWidth;
   insight.classList.add('ativo');
-  temporizadorInsight = setTimeout(() => {
+  temporizadorInsight = agendarAcao(() => {
     insight.classList.remove('ativo');
     insight.hidden = true;
   }, 2600);
@@ -423,7 +498,7 @@ function personalizarTexto(texto = '') {
 }
 
 function cancelarDigitacao() {
-  clearTimeout(temporizadorDigitacao);
+  cancelarAcao(temporizadorDigitacao);
   temporizadorDigitacao = null;
   if (elementoDigitacao) elementoDigitacao.classList.remove('digitando');
   elementoDigitacao = null;
@@ -431,6 +506,7 @@ function cancelarDigitacao() {
 }
 
 function concluirDigitacao() {
+  if (jogoPausado) return false;
   if (!concluirDigitacaoAtual) return false;
   concluirDigitacaoAtual();
   return true;
@@ -449,7 +525,7 @@ function digitarTexto(elemento, texto, aoConcluir = () => {}) {
   const finalizar = () => {
     if (concluido) return;
     concluido = true;
-    clearTimeout(temporizadorDigitacao);
+    cancelarAcao(temporizadorDigitacao);
     elemento.textContent = completo;
     elemento.classList.remove('digitando');
     temporizadorDigitacao = null;
@@ -468,7 +544,7 @@ function digitarTexto(elemento, texto, aoConcluir = () => {}) {
     if (indice >= completo.length) return finalizar();
     const caractere = completo[indice - 1];
     const pausa = /[.!?]/.test(caractere) ? 75 : /[,;:]/.test(caractere) ? 38 : 13;
-    temporizadorDigitacao = setTimeout(escrever, pausa);
+    temporizadorDigitacao = agendarAcao(escrever, pausa);
   };
   escrever();
 }
@@ -630,8 +706,8 @@ function mostrarTela(id) {
   }
   if (id !== 'tela-dialogo') {
     cancelarDigitacao();
-    clearTimeout(temporizadorAvancoDialogo);
-    clearTimeout(temporizadorInsight);
+    cancelarAcao(temporizadorAvancoDialogo);
+    cancelarAcao(temporizadorInsight);
     const insight = document.getElementById('insight-descoberta');
     if (insight) insight.hidden = true;
   }
@@ -643,11 +719,12 @@ function mostrarTela(id) {
 }
 
 function iniciarJogo() {
+  acoesPartida.forEach(cancelarAcao);
   pausarTempoJogo();
   pausarTempoAtendimento();
   partidaConcluida = false;
   ultimaTentativaId = null;
-  estado.temporizadores.forEach(clearTimeout);
+  estado.temporizadores.forEach(cancelarAcao);
   localStorage.removeItem(CHAVE_PROGRESSO);
   Object.assign(estado, {
     indiceClienteAtual: 0,
@@ -734,16 +811,16 @@ function animarChegada() {
   sprite.style.transform = 'translateX(-50%)';
   sprite.style.left = '-12%';
   let frameAtual = 0;
-  const intervalo = setInterval(() => {
+  const intervalo = repetirAcao(() => {
     sprite.src = framesAndando[frameAtual % framesAndando.length];
     frameAtual += 1;
   }, 145);
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  agendarAcao(() => {
     sprite.style.transition = 'left 2s cubic-bezier(.2,.8,.2,1)';
     sprite.style.left = '50%';
-  }));
-  setTimeout(() => {
-    clearInterval(intervalo);
+  }, 32);
+  agendarAcao(() => {
+    cancelarAcao(intervalo);
     sprite.src = imagemVendedor('parado');
   }, 2050);
 }
@@ -785,7 +862,7 @@ function renderizarMarcadores() {
         popup.querySelector('.observar').onclick = () => observarCliente(cliente.id);
         popup.querySelector('.interromper').onclick = () => irParaAtendimento(indice, true);
         if (!estado.temporizadores.has(cliente.id)) {
-          const timer = setTimeout(() => {
+          const timer = agendarAcao(() => {
             estado.clientesLiberados.add(cliente.id);
             estado.clienteRecemLiberado = cliente.id;
             estado.temporizadores.delete(cliente.id);
@@ -825,10 +902,10 @@ function irParaAtendimento(indice, momentoInadequado = false) {
   vendedor.style.transition = 'left .9s ease, top .9s ease';
   vendedor.style.left = `${cliente.x}%`;
   vendedor.style.top = `${Math.min(cliente.y + 4, 58)}%`;
-  setTimeout(() => {
+  agendarAcao(() => {
     const escritorio = document.getElementById('tela-escritorio');
     escritorio.classList.add('zoom-saindo');
-    setTimeout(() => {
+    agendarAcao(() => {
       escritorio.classList.remove('zoom-saindo');
       iniciarAtendimento(cliente);
     }, 480);
@@ -874,7 +951,7 @@ function iniciarAtendimento(cliente) {
 
 function renderizarNo() {
   if (estado.atendimentoExpulso) return;
-  clearTimeout(temporizadorAvancoDialogo);
+  cancelarAcao(temporizadorAvancoDialogo);
   const no = estado.clienteAtual.dialogo[estado.noAtual];
   if (!no) return finalizarAtendimento();
   const noPreparado = prepararNo(no);
@@ -966,10 +1043,10 @@ function escolherOpcao(opcao, botao) {
   document.getElementById('nome-vendedor-fala').textContent = estado.nomeVendedor.toUpperCase();
   mostrarPontosFlutuantes(pontos, balaoVendedor);
   digitarTexto(document.getElementById('texto-vendedor-fala'), opcao.texto, () => {
-    temporizadorAvancoDialogo = setTimeout(() => {
+    temporizadorAvancoDialogo = agendarAcao(() => {
       if (!opcao.resposta) return renderizarNo();
       digitarTexto(document.getElementById('texto-cliente'), opcao.resposta, () => {
-        temporizadorAvancoDialogo = setTimeout(renderizarNo, 850);
+        temporizadorAvancoDialogo = agendarAcao(renderizarNo, 850);
       });
     }, 600);
   });
@@ -1002,7 +1079,7 @@ function mostrarPontosFlutuantes(valor, referencia) {
   popup.textContent = `${valor > 0 ? '+' : ''}${valor}`;
   popup.style.color = valor >= 0 ? '#217c39' : '#a91e39';
   referencia.appendChild(popup);
-  setTimeout(() => popup.remove(), 1000);
+  agendarAcao(() => popup.remove(), 1000);
 }
 
 function atualizarBarraSatisfacao() {
@@ -1076,7 +1153,7 @@ function continuarAposResultado() {
   if (estado.indiceClienteAtual < clientes.length) mostrarEscritorio();
   else {
     mostrarEscritorio();
-    setTimeout(finalizarJogo, 1400);
+    agendarAcao(finalizarJogo, 1400);
   }
 }
 
@@ -1150,7 +1227,7 @@ function finalizarJogo() {
 }
 
 function iniciarCutscene(tipo) {
-  temporizadoresCutscene.forEach(clearTimeout);
+  temporizadoresCutscene.forEach(cancelarAcao);
   temporizadoresCutscene = [];
   const sucesso = tipo === 'sucesso';
   const feminino = estado.sexoVendedor === 'feminino';
@@ -1199,7 +1276,7 @@ function iniciarCutscene(tipo) {
   const fala = document.getElementById('cutscene-fala');
   fala.textContent = falas[0];
   falas.slice(1).forEach((texto, indice) => {
-    temporizadoresCutscene.push(setTimeout(() => {
+    temporizadoresCutscene.push(agendarAcao(() => {
       fala.textContent = texto;
       fala.animate(
         [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'translateY(0)' }],
@@ -1212,7 +1289,7 @@ function iniciarCutscene(tipo) {
 }
 
 function encerrarCutscene() {
-  temporizadoresCutscene.forEach(clearTimeout);
+  temporizadoresCutscene.forEach(cancelarAcao);
   temporizadoresCutscene = [];
   mostrarResultadoFinal();
 }
@@ -1341,10 +1418,11 @@ function continuarPartidaSalva() {
     return;
   }
 
+  acoesPartida.forEach(cancelarAcao);
   pausarTempoJogo();
   pausarTempoAtendimento();
   partidaConcluida = false;
-  estado.temporizadores.forEach(clearTimeout);
+  estado.temporizadores.forEach(cancelarAcao);
   const perfilSalvo = lerPerfilVendedor();
   Object.assign(estado, {
     nomeVendedor: String(progresso.nomeVendedor || perfilSalvo?.nomeVendedor || 'Kevin').slice(0, 20),
@@ -1525,9 +1603,23 @@ window.addEventListener('pagehide', () => {
 });
 
 document.addEventListener('keydown', evento => {
+  if (jogoPausado) {
+    if (!evento.repeat && evento.key === 'Escape') {
+      evento.preventDefault();
+      retomarJogo();
+    } else if (evento.key === 'Tab') {
+      evento.preventDefault();
+      document.getElementById('botao-retomar').focus();
+    }
+    return;
+  }
   const modalAberto = !document.getElementById('modal').hidden;
   if (evento.key === 'Escape' && modalAberto) {
     fecharModal();
+    return;
+  }
+  if (evento.key === 'Escape' && !evento.repeat) {
+    pausarJogo();
     return;
   }
   if (modalAberto || evento.repeat || !document.getElementById('tela-dialogo').classList.contains('ativa')) return;

@@ -4,7 +4,7 @@ Jogo de atendimento consultivo com progresso e histórico locais. O ranking onli
 
 ## Rodar localmente
 
-1. Copie `.env.example` para `.env` e preencha os dados do app Web do Firebase. O `.env` local deste projeto já contém a configuração informada para `epav-99b70` e não entra no Git.
+1. Copie `.env.example` para `.env` e preencha os dados do app Web do Firebase `epav-game`. O arquivo `.env` não entra no Git.
 2. Execute `node scripts/build-firebase-config.mjs` na raiz do projeto.
 3. Sirva a pasta por HTTP, por exemplo com `python -m http.server 8000`, e abra `http://localhost:8000`.
 
@@ -12,12 +12,12 @@ O arquivo gerado `js/firebase-config.js` é ignorado pelo Git. Configuração de
 
 ## Preparar o Firebase na conta do responsável
 
-O projeto `epav-99b70` já foi informado. Na [console do Firebase](https://console.firebase.google.com/), com a conta que será dona da entrega:
+O site publicado utiliza o projeto `epav-game`. Na [console do Firebase](https://console.firebase.google.com/), com a conta que será dona da entrega:
 
-1. Confirme que o projeto e o app Web `epav-99b70` pertencem a essa conta.
-2. Em **Authentication → Sign-in method**, habilite **E-mail/senha**. Em **Settings → Authorized domains**, inclua o domínio de publicação, normalmente `lucaslimaoliveira.github.io`, e `localhost` para testes locais, se necessário.
+1. Confirme que o projeto e o app Web `epav-game` pertencem a essa conta.
+2. Em **Authentication → Sign-in method**, habilite **E-mail/senha**. Em **Settings → Authorized domains**, inclua o domínio de publicação `epav-game.github.io` e `localhost` para testes locais, se necessário.
 3. Em **Firestore Database**, crie o banco **`(default)`**, se ainda não existir. Escolha a região com cuidado; ela não pode ser alterada depois.
-4. Publique as regras e o índice de desempate deste repositório: `firebase deploy --only firestore --project epav-99b70` após autenticar o Firebase CLI na conta proprietária. Aguarde o índice ficar pronto antes de abrir o ranking. Não deixe o banco em modo de teste aberto.
+4. Publique as regras e o índice de desempate deste repositório: `firebase deploy --only firestore --project epav-game` após autenticar o Firebase CLI na conta proprietária. Aguarde o índice ficar pronto antes de abrir o ranking. Não deixe o banco em modo de teste aberto.
 
 O cadastro e login usam e-mail e senha, sem etapa de verificação por e-mail. As regras permitem listar até 25 resultados e escrever somente na posição do próprio usuário autenticado. Cada conta ocupa uma posição; uma nova publicação substitui a anterior. O e-mail nunca é gravado no ranking.
 
@@ -47,3 +47,13 @@ Para testar localmente, adicione `TEMPO_ATENDIMENTO_SEGUNDOS=140` ao `.env` e ex
 ## Limite de segurança do ranking
 
 O site é estático e calcula pontos e tempo no navegador. As regras validam login, dono do registro, formato e faixas numéricas, mas **não conseguem comprovar que o jogador realmente fez aquelas escolhas ou levou aquele tempo**. Portanto, um usuário técnico ainda pode falsificar seu resultado. Para um ranking competitivo ou com premiação, será necessário validar partidas em um servidor confiável ou Cloud Functions antes de aceitar os resultados.
+
+## Área administrativa
+
+Abra **Administração** no menu ou `admin.html` e entre com uma conta que tenha a custom claim `admin: true` no Firebase Authentication. A conta solicitada foi provisionada no projeto `epav-game`. Nenhuma senha ou chave de conta de serviço faz parte do site ou deste repositório.
+
+O painel consulta os resultados publicados, oferece busca por nome, ordenação, resumo e exportação CSV. Carrega 100 registros por página; os indicadores, filtros e CSV consideram somente os registros já carregados. Atualizar reinicia a consulta. A sessão administrativa dura nesta aba até sair ou fechá-la. Esta primeira versão consulta resultados; não altera pontuações nem gerencia contas.
+
+As regras permitem consultas de até 100 registros somente a administradores autenticados. O ranking público continua limitado a 25. A permissão deve ser atribuída por uma ferramenta confiável com Firebase Admin SDK; o navegador nunca recebe a chave privada. Publicar no GitHub Pages não publica as regras do Firestore: use o comando de deploy acima quando elas mudarem.
+
+Verificações dos filtros, indicadores e proteção contra fórmulas no CSV: `node --test tests/admin-data.test.mjs`.

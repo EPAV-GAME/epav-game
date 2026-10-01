@@ -2,9 +2,14 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
     match /ranking/{uid} {
       allow get: if true;
-      allow list: if request.query.limit != null && request.query.limit <= 25;
+      allow list: if request.query.limit != null
+        && (request.query.limit <= 25 || (isAdmin() && request.query.limit <= 100));
 
       allow create, update: if request.auth != null
         && request.auth.uid == uid

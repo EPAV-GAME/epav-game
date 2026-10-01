@@ -26,7 +26,7 @@
     };
     if (erro?.message === 'CONFIG_AUSENTE') return 'Configuração do Firebase não gerada. Consulte o README.';
     if (erro?.code === 'permission-denied') return contexto === 'ranking'
-      ? 'As regras atuais do Firestore não permitem ler o ranking. Publique firestore.rules no projeto epav-99b70.'
+      ? 'As regras atuais do Firestore não permitem ler o ranking. Publique firestore.rules no projeto configurado para o site.'
       : 'O Firestore recusou a publicação. Confira as regras do banco.';
     if (erro?.code === 'failed-precondition' && contexto === 'ranking')
       return 'O Firestore ou o índice de desempate ainda não está pronto. Confira o banco e publique os índices.';

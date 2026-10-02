@@ -50,6 +50,8 @@ O site é estático e calcula pontos e tempo no navegador. As regras validam log
 
 ## Área administrativa
 
+O catálogo de produtos agora possui um painel independente em [EPAV Admin](https://epav-game.github.io/epav-admin/), com código em [EPAV-GAME/epav-admin](https://github.com/EPAV-GAME/epav-admin). O painel permite editar nome, disponibilidade e classificações com histórico obrigatório. Os dois sites compartilham o Firebase `epav-game`; mantenha `firestore.rules` sincronizado entre os repositórios antes de publicar regras do banco.
+
 Abra **Administração** no menu ou `admin.html` e entre com uma conta que tenha a custom claim `admin: true` no Firebase Authentication. A conta solicitada foi provisionada no projeto `epav-game`. Nenhuma senha ou chave de conta de serviço faz parte do site ou deste repositório.
 
 O painel consulta os resultados publicados, oferece busca por nome, ordenação, resumo e exportação CSV. Carrega 100 registros por página; os indicadores, filtros e CSV consideram somente os registros já carregados. Atualizar reinicia a consulta. A sessão administrativa dura nesta aba até sair ou fechá-la. Esta primeira versão consulta resultados; não altera pontuações nem gerencia contas.

@@ -76,7 +76,7 @@
   }
 
   function atualizarContaUI() {
-    elemento('conta-formulario').hidden = Boolean(usuario);
+    elemento('conta-formulario').hidden = Boolean(usuario) || !elemento('conta-recuperacao').hidden;
     elemento('conta-logada').hidden = !usuario;
     elemento('conta-email-logado').textContent = usuario?.email || '';
     elemento('conta-publicacao').hidden = !tentativaPendente;

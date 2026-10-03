@@ -48,6 +48,12 @@ Para testar localmente, adicione `TEMPO_ATENDIMENTO_SEGUNDOS=140` ao `.env` e ex
 
 O site é estático e calcula pontos e tempo no navegador. As regras validam login, dono do registro, formato e faixas numéricas, mas **não conseguem comprovar que o jogador realmente fez aquelas escolhas ou levou aquele tempo**. Portanto, um usuário técnico ainda pode falsificar seu resultado. Para um ranking competitivo ou com premiação, será necessário validar partidas em um servidor confiável ou Cloud Functions antes de aceitar os resultados.
 
+## Recuperação de senha
+
+O botão **Esqueci minha senha** na conta do ranking usa o serviço independente [epav-password-reset](https://github.com/EPAV-GAME/epav-password-reset), hospedado no Cloudflare. O jogador informa o e-mail, conclui a verificação Turnstile e solicita o envio. O link recebido abre a página de nova senha do painel EPAV; a senha é alterada diretamente pelo Firebase Authentication.
+
+Defina as repository variables `PASSWORD_RESET_SERVICE_URL` e `TURNSTILE_SITE_KEY` para publicar essa integração. A chave secreta do Turnstile e a senha de app Gmail ficam somente no Worker. A mensagem de confirmação não revela se o e-mail tem conta e não comprova entrega. Não há envio padrão alternativo pelo Firebase.
+
 ## Área administrativa
 
 O catálogo de produtos agora possui um painel independente em [EPAV Admin](https://epav-game.github.io/epav-admin/), com código em [EPAV-GAME/epav-admin](https://github.com/EPAV-GAME/epav-admin). O painel permite editar nome, disponibilidade e classificações com histórico obrigatório. Os dois sites compartilham o Firebase `epav-game`; mantenha `firestore.rules` sincronizado entre os repositórios antes de publicar regras do banco.

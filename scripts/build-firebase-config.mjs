@@ -46,6 +46,11 @@ if (ausentes.length) {
   throw new Error(`Configuração Firebase incompleta: ${ausentes.join(', ')}`);
 }
 
-const conteudo = `// Gerado durante o build; não editar nem versionar.\nwindow.EPAV_FIREBASE_CONFIG = ${JSON.stringify(config).replace(/</g, '\\u003c')};\nwindow.EPAV_GAME_CONFIG = ${JSON.stringify({ tempoAtendimentoSegundos })};\n`;
+const emailConfig = { serviceUrl: process.env.PASSWORD_RESET_SERVICE_URL || arquivoEnv.PASSWORD_RESET_SERVICE_URL || '', turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || arquivoEnv.TURNSTILE_SITE_KEY || '' };
+if (emailConfig.serviceUrl) {
+  const url = new URL(emailConfig.serviceUrl);
+  if (url.protocol !== 'https:' || !url.hostname.endsWith('.workers.dev') || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('URL do serviço de recuperação inválida.');
+}
+const conteudo = `// Gerado durante o build; não editar nem versionar.\nwindow.EPAV_FIREBASE_CONFIG = ${JSON.stringify(config).replace(/</g, '\\u003c')};\nwindow.EPAV_GAME_CONFIG = ${JSON.stringify({ tempoAtendimentoSegundos })};\nwindow.EPAV_EMAIL_CONFIG = ${JSON.stringify(emailConfig).replace(/</g, '\\u003c')};\n`;
 writeFileSync(resolve('js/firebase-config.js'), conteudo, { encoding: 'utf8', flag: 'w' });
 console.log(`Configuração gerada: limite de ${tempoAtendimentoSegundos} segundos por atendimento.`);

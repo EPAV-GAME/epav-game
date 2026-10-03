@@ -112,6 +112,7 @@
   }
 
   function fecharConta() {
+    window.EpavRecovery.fechar();
     elemento('modal-conta').hidden = true;
     tentativaPendente = null;
     atualizarContaUI();
@@ -145,20 +146,7 @@
   }
 
   async function recuperarSenha() {
-    const campo = elemento('conta-email');
-    if (!campo.value || !campo.checkValidity()) {
-      campo.focus();
-      campo.reportValidity();
-      return;
-    }
-    statusConta('Enviando instruções…');
-    try {
-      const { auth, authSdk } = await carregarServicos();
-      await authSdk.sendPasswordResetEmail(auth, campo.value.trim());
-      statusConta('Se a conta existir, enviaremos instruções para esse e-mail.', 'sucesso');
-    } catch (erro) {
-      statusConta(mensagemErro(erro), 'erro');
-    }
+    await window.EpavRecovery.abrir(elemento('conta-email').value.trim());
   }
 
   async function sair() {

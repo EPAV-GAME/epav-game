@@ -54,7 +54,17 @@ O botão **Esqueci minha senha** na conta do ranking usa o serviço independente
 
 Defina as repository variables `PASSWORD_RESET_SERVICE_URL` e `TURNSTILE_SITE_KEY` para publicar essa integração. A chave secreta do Turnstile e a senha de app Gmail ficam somente no Worker. A mensagem de confirmação não revela se o e-mail tem conta e não comprova entrega. Não há envio padrão alternativo pelo Firebase.
 
-## Área administrativa
+## Escolha de produtos durante a conversa
+
+Cada cliente possui uma etapa de recomendação: Lucas d3, Marina d5, Rafael d7, Camila d6 e André d7. Nessa etapa, o jogo consulta a API independente [epav-product-evaluator](https://github.com/EPAV-GAME/epav-product-evaluator) e apresenta três alimentos distintos disponíveis no catálogo Firebase, com foto e ficha. O jogador escolhe um produto, informa a quantidade e recebe a avaliação Groq de 0 a 1000 com justificativas. Essa nota aparece como adequação do produto; a pontuação original das respostas continua sendo calculada na escala de 400 pontos.
+
+É necessário entrar ou criar uma conta Firebase para consultar a API. O cronômetro fica parado durante a comparação, autenticação e avaliação. Se o serviço ficar indisponível, o jogador pode tentar novamente ou continuar sem avaliação; o jogo não inventa uma nota. As escolhas anteriores e a avaliação atual são salvas na retomada. Partidas antigas sem histórico detalhado passam a oferecer produtos a partir do próximo atendimento.
+
+O navegador recebe somente campos permitidos da ficha. A conta de serviço Firebase e as chaves Groq ficam no Worker. A busca de produtos e a avaliação são endpoints separados da API; consultar as três opções não consome a Groq. A API reconstruirá o roteiro oficial para validar o histórico enviado pelo jogo.
+
+Verificações: `node --test tests/*.test.mjs`.
+
+## Painel administrativo
 
 O catálogo de produtos agora possui um painel independente em [EPAV Admin](https://epav-game.github.io/epav-admin/), com código em [EPAV-GAME/epav-admin](https://github.com/EPAV-GAME/epav-admin). O painel permite editar nome, disponibilidade e classificações com histórico obrigatório. Os dois sites compartilham o Firebase `epav-game`; mantenha `firestore.rules` sincronizado entre os repositórios antes de publicar regras do banco.
 

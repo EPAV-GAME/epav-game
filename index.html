@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="assets/images/epav-icone.png">
   <link rel="apple-touch-icon" href="assets/images/epav-icone.png">
   <title>Fechando Negócio — EPAV</title>
-  <link rel="stylesheet" href="css/style.css?v=20260928-5">
+  <link rel="stylesheet" href="css/style.css?v=20261003-products">
 </head>
 <body>
   <main id="jogo">
@@ -244,6 +244,7 @@
           <div id="feedback-decisao" class="feedback-decisao" aria-live="polite" hidden>
             <strong id="feedback-pontos"></strong><span id="feedback-texto"></span>
           </div>
+          <p id="produto-indicado" class="produto-indicado" hidden></p>
           <div id="opcoes-resposta"></div>
           <p class="dica-teclado" aria-label="Atalhos do teclado">⌨ Escolha com A, B, C… ou 1, 2, 3… · Use as setas para navegar</p>
         </div>
@@ -400,11 +401,26 @@
     </div>
   </div>
 
+  <div id="modal-produtos" class="modal modal-produtos" hidden>
+    <div class="produtos-painel painel-pixel" role="dialog" aria-modal="true" aria-labelledby="produtos-titulo" aria-describedby="produtos-contexto">
+      <header class="produtos-cabecalho"><div><p class="sobretitulo">SUA RECOMENDAÇÃO</p><h2 id="produtos-titulo" tabindex="-1">Escolha um produto</h2></div><button type="button" class="botao secundario" onclick="pausarJogo()" aria-label="Pausar partida">Ⅱ Pausar</button></header>
+      <p id="produtos-contexto"></p>
+      <p class="produto-nota">Consulte as três fichas e escolha a opção que atende melhor ao cliente. O cronômetro fica parado durante esta etapa.</p>
+      <form id="produtos-form" hidden>
+        <div id="produtos-lista" class="produtos-lista"></div>
+        <div class="produtos-quantidade"><label>Unidades ou embalagens<input id="produto-unidades" type="number" min="1" max="1000" step="1" value="1" required></label><label>Peso total (kg, se souber)<input id="produto-peso" type="number" min="0.001" max="1000" step="any" placeholder="Opcional"></label></div>
+        <button id="produto-confirmar" class="botao primario" type="submit">Recomendar produto</button>
+      </form>
+      <section id="produtos-resultado" hidden aria-label="Avaliação da recomendação"><p class="produto-nota">ADEQUAÇÃO AO CLIENTE</p><strong id="produto-score" class="produto-score"></strong><p id="produto-resumo"></p><p id="produto-sugestao"></p><details><summary>Entender a avaliação</summary><div id="produto-criterios"></div></details><p id="produto-faltantes" class="produto-nota"></p></section>
+      <p id="produtos-status" role="status" aria-live="polite"></p><div id="produtos-acoes" class="produtos-acoes"></div>
+    </div>
+  </div>
   <script src="js/firebase-config.js"></script>
   <script src="js/clientsData.js?v=20260915-1"></script>
   <script src="js/preload-images.js?v=20260928-1"></script>
-  <script src="js/game.js?v=20260928-4"></script>
+  <script src="js/game.js?v=20261003-products"></script>
   <script src="js/password-recovery.js?v=20261003-1"></script>
-  <script src="js/ranking.js?v=20261003-1"></script>
+  <script src="js/ranking.js?v=20261003-products"></script>
+  <script src="js/products.js?v=20261003-products"></script>
 </body>
 </html>

@@ -7,6 +7,7 @@
   let usuario = null;
   let tentativaPendente = null;
   let publicando = false;
+  let finalidadeConta = 'ranking';
 
   const elemento = id => document.getElementById(id);
 
@@ -99,13 +100,14 @@
     }
   }
 
-  async function abrirConta() {
+  async function abrirConta(options = {}) {
+    finalidadeConta = options.finalidade === 'produtos' ? 'produtos' : 'ranking';
     elemento('modal-conta').hidden = false;
     statusConta('Conectando à conta…');
     elemento('conta-email').focus();
     try {
       await carregarServicos();
-      statusConta(usuario ? 'Conta pronta. Você já pode publicar sua partida.' : 'Entre ou crie uma conta por e-mail e senha.');
+      statusConta(usuario ? 'Conta pronta.' : finalidadeConta === 'produtos' ? 'Entre ou crie uma conta para consultar os produtos e avaliar sua recomendação.' : 'Entre ou crie uma conta por e-mail e senha.');
     } catch (erro) {
       statusConta(mensagemErro(erro), 'erro');
     }
@@ -116,6 +118,7 @@
     elemento('modal-conta').hidden = true;
     tentativaPendente = null;
     atualizarContaUI();
+    window.dispatchEvent(new Event('epav-conta-fechada'));
   }
 
   async function entrar(evento) {
@@ -127,6 +130,7 @@
       await authSdk.signInWithEmailAndPassword(auth, elemento('conta-email').value.trim(), elemento('conta-senha').value);
       elemento('conta-senha').value = '';
       statusConta('Login realizado.', 'sucesso');
+      if (finalidadeConta === 'produtos') fecharConta();
     } catch (erro) {
       statusConta(mensagemErro(erro), 'erro');
     }
@@ -140,6 +144,7 @@
       await authSdk.createUserWithEmailAndPassword(auth, elemento('conta-email').value.trim(), elemento('conta-senha').value);
       elemento('conta-senha').value = '';
       statusConta('Conta criada. Você já pode publicar sua partida.', 'sucesso');
+      if (finalidadeConta === 'produtos') fecharConta();
     } catch (erro) {
       statusConta(mensagemErro(erro), 'erro');
     }
@@ -269,6 +274,11 @@
     if (evento.key === 'Escape' && !elemento('modal-conta').hidden) fecharConta();
   });
 
-  window.EpavRanking = { abrirRanking, carregarRanking, abrirConta, fecharConta, publicarTentativa };
+  async function tokenProdutos() {
+    const { auth } = await carregarServicos();
+    if (!auth.currentUser) throw new Error('LOGIN');
+    return auth.currentUser.getIdToken();
+  }
+  window.EpavRanking = { abrirRanking, carregarRanking, abrirConta, fecharConta, publicarTentativa, tokenProdutos };
   atualizarContaUI();
 })();

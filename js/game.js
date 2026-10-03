@@ -20,6 +20,8 @@ const estado = {
   momentoInadequado: false,
   bonusAtendimento: 0,
   fatosDescobertos: [],
+  historicoAtendimento: [],
+  recomendacaoAtendimento: null,
   ultimaQualidade: 'neutra',
   desempenhoCategorias: {},
   desempenhoAtendimento: {},
@@ -103,6 +105,7 @@ function pausarJogo() {
   animacoesPausadas.forEach(animacao => animacao.pause());
   focoAntesDaPausa = document.activeElement;
   document.getElementById('jogo').inert = true;
+  document.getElementById('modal-produtos').inert = true;
   document.getElementById('modal-pausa').hidden = false;
   document.getElementById('botao-retomar').focus();
   salvarProgresso();
@@ -111,14 +114,16 @@ function pausarJogo() {
 function retomarJogo() {
   if (!jogoPausado) return;
   document.getElementById('modal-pausa').hidden = true;
-  document.getElementById('jogo').inert = false;
+  document.getElementById('jogo').inert = !document.getElementById('modal-produtos').hidden;
+  document.getElementById('modal-produtos').inert = false;
   jogoPausado = false;
   animacoesPausadas.forEach(animacao => animacao.play());
   animacoesPausadas = [];
   acoesPartida.forEach(programarAcao);
   sincronizarCronometro();
   const foco = focoAntesDaPausa?.isConnected && !focoAntesDaPausa.disabled
-    && focoAntesDaPausa.matches('button, [tabindex]') ? focoAntesDaPausa
+    && focoAntesDaPausa.matches('button, input, summary, [tabindex]') ? focoAntesDaPausa
+    : !document.getElementById('modal-produtos').hidden ? document.getElementById('produtos-titulo')
     : document.querySelector('.tela.ativa button[onclick="pausarJogo()"]');
   foco?.focus({ preventScroll: true });
 }
@@ -148,7 +153,7 @@ function atualizarTempoEscritorio() {
 function sincronizarCronometro() {
   const tela = document.querySelector('.tela.ativa')?.id;
   const jogando = ['tela-escritorio', 'tela-dialogo', 'tela-resultado'].includes(tela)
-    && !document.hidden && document.getElementById('modal').hidden && !partidaConcluida && !jogoPausado;
+    && !document.hidden && document.getElementById('modal').hidden && document.getElementById('modal-produtos').hidden && !partidaConcluida && !jogoPausado;
   if (jogando && inicioTrechoJogoMs === null) inicioTrechoJogoMs = performance.now();
   if (jogando && intervaloTempoJogo === null) {
     intervaloTempoJogo = setInterval(atualizarTempoEscritorio, 250);
@@ -198,6 +203,7 @@ function deveContarTempoAtendimento() {
   return document.querySelector('.tela.ativa')?.id === 'tela-dialogo'
     && !document.hidden
     && document.getElementById('modal').hidden
+    && document.getElementById('modal-produtos').hidden
     && Boolean(estado.clienteAtual)
     && !estado.atendimentoExpulso
     && !jogoPausado;
@@ -698,6 +704,7 @@ function voltarDaAjuda() {
 }
 
 function mostrarTela(id) {
+  if (id !== 'tela-dialogo') window.EpavProdutos?.fechar();
   const telaAnterior = document.querySelector('.tela.ativa')?.id;
   if (['tela-escritorio', 'tela-dialogo', 'tela-resultado'].includes(telaAnterior)
       && !['tela-escritorio', 'tela-dialogo', 'tela-resultado'].includes(id)) {
@@ -746,6 +753,8 @@ function iniciarJogo() {
     momentoInadequado: false,
     bonusAtendimento: 0,
     fatosDescobertos: [],
+    historicoAtendimento: [],
+    recomendacaoAtendimento: null,
     ultimaQualidade: 'neutra',
     desempenhoCategorias: {},
     desempenhoAtendimento: {},
@@ -919,6 +928,9 @@ function iniciarAtendimento(cliente) {
   estado.pontuacaoAtendimento = 0;
   estado.bonusAtendimento = 0;
   estado.fatosDescobertos = [];
+  estado.historicoAtendimento = [];
+  estado.recomendacaoAtendimento = null;
+  document.getElementById('produto-indicado').hidden = true;
   estado.ultimaQualidade = 'neutra';
   estado.desempenhoAtendimento = {};
   estado.tempoAtendimentoMs = 0;
@@ -968,7 +980,28 @@ function renderizarNo() {
   const container = document.getElementById('opcoes-resposta');
   container.innerHTML = '';
   container.hidden = true;
-  digitarTexto(document.getElementById('texto-cliente'), noPreparado.texto, () => renderizarOpcoes({ ...no, opcoes: noPreparado.opcoes }));
+  digitarTexto(document.getElementById('texto-cliente'), noPreparado.texto, () => prepararEscolhaProduto({ ...no, opcoes: noPreparado.opcoes }));
+}
+
+const etapasProdutos = { cliente1: 'd3', cliente2: 'd5', cliente3: 'd7', cliente4: 'd6', cliente5: 'd7' };
+function prepararEscolhaProduto(no) {
+  const cliente = estado.clienteAtual;
+  const registro = estado.recomendacaoAtendimento;
+  if (!window.EpavProdutos || !Array.isArray(estado.historicoAtendimento)
+      || etapasProdutos[cliente.id] !== estado.noAtual || registro?.concluido) return renderizarOpcoes(no);
+  window.EpavProdutos.abrir({
+    cliente,
+    contexto: { cliente_id: cliente.id, no_atual: estado.noAtual, historico: [...estado.historicoAtendimento] },
+    registro,
+    aoAvaliar: resultado => { estado.recomendacaoAtendimento = resultado; salvarProgresso(); },
+    aoConcluir: resultado => {
+      estado.recomendacaoAtendimento = { ...resultado, concluido: true };
+      const resumo = document.getElementById('produto-indicado');
+      resumo.hidden = resultado.status !== 'avaliado';
+      resumo.textContent = resultado.status === 'avaliado' ? `Produto indicado: ${resultado.nome} · adequação ${resultado.avaliacao.score}/1000` : '';
+      salvarProgresso(); renderizarOpcoes(no); sincronizarCronometro();
+    }
+  });
 }
 
 function renderizarOpcoes(no) {
@@ -998,6 +1031,7 @@ function renderizarOpcoes(no) {
 function escolherOpcao(opcao, botao) {
   if (estado.atendimentoExpulso) return;
   cancelarDigitacao();
+  if (Array.isArray(estado.historicoAtendimento)) estado.historicoAtendimento.push({ no_id: estado.noAtual, opcao_id: opcao.id });
   document.querySelectorAll('#opcoes-resposta button').forEach(item => item.disabled = true);
   estado.satisfacao = Math.max(0, Math.min(100, estado.satisfacao + opcao.efeitoSatisfacao));
   let pontos = 0;
@@ -1380,6 +1414,8 @@ function salvarProgresso() {
     momentoInadequado: estado.momentoInadequado,
     bonusAtendimento: estado.bonusAtendimento,
     fatosDescobertos: estado.fatosDescobertos,
+    historicoAtendimento: estado.historicoAtendimento,
+    recomendacaoAtendimento: estado.recomendacaoAtendimento,
     ultimaQualidade: estado.ultimaQualidade,
     desempenhoCategorias: estado.desempenhoCategorias,
     desempenhoAtendimento: estado.desempenhoAtendimento,
@@ -1446,6 +1482,8 @@ function continuarPartidaSalva() {
     momentoInadequado: Boolean(progresso.momentoInadequado),
     bonusAtendimento: Number(progresso.bonusAtendimento) || 0,
     fatosDescobertos: Array.isArray(progresso.fatosDescobertos) ? progresso.fatosDescobertos : [],
+    historicoAtendimento: Array.isArray(progresso.historicoAtendimento) ? progresso.historicoAtendimento : progresso.noAtual === 'd1' ? [] : null,
+    recomendacaoAtendimento: progresso.recomendacaoAtendimento || null,
     ultimaQualidade: progresso.ultimaQualidade || 'neutra',
     desempenhoCategorias: progresso.desempenhoCategorias && typeof progresso.desempenhoCategorias === 'object' ? progresso.desempenhoCategorias : {},
     desempenhoAtendimento: progresso.desempenhoAtendimento && typeof progresso.desempenhoAtendimento === 'object' ? progresso.desempenhoAtendimento : {},
@@ -1475,9 +1513,13 @@ function restaurarAtendimento() {
   document.getElementById('vendedor-dialogo').src = imagemVendedor('parado');
   document.getElementById('nome-falante').textContent = cliente.nome.toUpperCase();
   atualizarFichaEscuta();
+  const recomendacao = estado.recomendacaoAtendimento;
+  const resumoProduto = document.getElementById('produto-indicado');
+  resumoProduto.hidden = recomendacao?.status !== 'avaliado';
+  resumoProduto.textContent = recomendacao?.status === 'avaliado' ? `Produto indicado: ${recomendacao.nome} · adequação ${recomendacao.avaliacao.score}/1000` : '';
   atualizarEstadoConversa();
   atualizarProgressoMissao(true);
-  exibirFeedbackDecisao(0, 'Partida restaurada. Continue de onde parou.');
+  exibirFeedbackDecisao(0, estado.historicoAtendimento === null ? 'Partida restaurada. A nova escolha de produtos estará disponível a partir do próximo atendimento.' : 'Partida restaurada. Continue de onde parou.');
   mostrarTela('tela-dialogo');
   sincronizarTempoAtendimento();
   renderizarNo();
@@ -1622,7 +1664,7 @@ document.addEventListener('keydown', evento => {
     pausarJogo();
     return;
   }
-  if (modalAberto || evento.repeat || !document.getElementById('tela-dialogo').classList.contains('ativa')) return;
+  if (modalAberto || !document.getElementById('modal-produtos').hidden || !document.getElementById('modal-conta').hidden || evento.repeat || !document.getElementById('tela-dialogo').classList.contains('ativa')) return;
   if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
 
   const botoes = [...document.querySelectorAll('#opcoes-resposta button:not(:disabled)')];

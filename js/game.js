@@ -1655,6 +1655,7 @@ document.addEventListener('keydown', evento => {
     }
     return;
   }
+  if (!document.getElementById('modal-conta').hidden) return;
   const modalAberto = !document.getElementById('modal').hidden;
   if (evento.key === 'Escape' && modalAberto) {
     fecharModal();

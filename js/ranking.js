@@ -102,6 +102,10 @@
 
   async function abrirConta(options = {}) {
     finalidadeConta = options.finalidade === 'produtos' ? 'produtos' : 'ranking';
+    elemento('conta-titulo').textContent = finalidadeConta === 'produtos' ? 'Conta do jogador' : 'Conta do ranking';
+    elemento('conta-intro').textContent = finalidadeConta === 'produtos'
+      ? 'Entre para consultar as fichas dos produtos e receber a avaliação da sua escolha.'
+      : 'O jogo funciona sem conta. Entre somente se quiser publicar uma partida.';
     elemento('modal-conta').hidden = false;
     statusConta('Conectando à conta…');
     elemento('conta-email').focus();

@@ -34,7 +34,7 @@
         ? 'O serviço está ocupado. Aguarde um pouco e tente novamente.'
         : 'Não foi possível consultar o serviço agora. Você pode tentar novamente ou continuar sem esta avaliação.');
     $('produtos-acoes').replaceChildren(
-      button(login ? 'Entrar ou criar conta' : 'Tentar novamente', login ? () => window.EpavRanking.abrirConta({ finalidade: 'produtos' }) : retry),
+      button(login ? 'Entrar ou criar conta' : 'Tentar novamente', login ? () => { modal.inert = true; window.EpavRanking.abrirConta({ finalidade: 'produtos' }); } : retry),
       button('Continuar sem avaliação', () => finish({ noId: session.contexto.no_atual, status: 'indisponivel' }), true));
   }
   function photo(product, api) {
@@ -134,6 +134,7 @@
   }
   $('produtos-form').addEventListener('submit', evaluate);
   window.addEventListener('epav-conta-fechada', () => {
+    modal.inert = jogoPausado;
     if (!session || busy) return;
     const retry = session.repetirDepoisLogin;
     delete session.repetirDepoisLogin;

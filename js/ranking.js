@@ -4,6 +4,7 @@
 
   const versaoSdk = '12.18.0';
   let servicosPromise = null;
+  let bancoPromise = null;
   let usuario = null;
   let tentativaPendente = null;
   let publicando = false;
@@ -50,15 +51,13 @@
       const config = window.EPAV_FIREBASE_CONFIG;
       if (!config || !config.apiKey || !config.projectId || !config.appId) throw new Error('CONFIG_AUSENTE');
       const base = `https://www.gstatic.com/firebasejs/${versaoSdk}`;
-      const [appSdk, authSdk, firestoreSdk] = await Promise.all([
+      const [appSdk, authSdk] = await Promise.all([
         import(`${base}/firebase-app.js`),
-        import(`${base}/firebase-auth.js`),
-        import(`${base}/firebase-firestore.js`)
+        import(`${base}/firebase-auth.js`)
       ]);
       const app = appSdk.initializeApp(config);
       const auth = authSdk.getAuth(app);
       auth.languageCode = 'pt';
-      const db = firestoreSdk.getFirestore(app); // Banco (default).
       await new Promise((resolve, reject) => {
         let primeiraResposta = true;
         authSdk.onAuthStateChanged(auth, pessoa => {
@@ -70,12 +69,20 @@
           }
         }, reject);
       });
-      return { auth, db, authSdk, firestoreSdk };
+      return { app, auth, authSdk };
     })().catch(erro => {
       servicosPromise = null;
       throw erro;
     });
     return servicosPromise;
+  }
+
+  async function carregarBanco() {
+    if (!bancoPromise) bancoPromise = carregarServicos().then(async ({ app }) => {
+      const firestoreSdk = await import(`https://www.gstatic.com/firebasejs/${versaoSdk}/firebase-firestore.js`);
+      return { db: firestoreSdk.getFirestore(app), firestoreSdk };
+    }).catch(erro => { bancoPromise = null; throw erro; });
+    return bancoPromise;
   }
 
   function atualizarContaUI() {
@@ -194,7 +201,7 @@
     atualizarContaUI();
     statusConta('Publicando sua partida…');
     try {
-      const { db, firestoreSdk } = await carregarServicos();
+      const { db, firestoreSdk } = await carregarBanco();
       await firestoreSdk.setDoc(firestoreSdk.doc(db, 'ranking', usuario.uid), {
         uid: usuario.uid,
         nome: tentativa.nome,

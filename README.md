@@ -64,6 +64,8 @@ O navegador recebe somente campos permitidos da ficha. A conta de serviço Fireb
 
 Verificações: `node --test tests/*.test.mjs`.
 
+A busca dos três produtos começa assim que a fala da etapa de recomendação aparece, enquanto o jogador a lê. O modal reaproveita essa mesma consulta e as fotos já começam a carregar em segundo plano. A preparação dura até 30 segundos e é descartada ao mudar conta, contexto ou sair da etapa. Somente produtos com URL válida de foto entram nas opções; falta de três itens compatíveis é informada ao jogador. O SDK do Firestore só é baixado para publicar uma pontuação, e não para consultar produtos.
+
 ## Painel administrativo
 
 O catálogo de produtos agora possui um painel independente em [EPAV Admin](https://epav-game.github.io/epav-admin/), com código em [EPAV-GAME/epav-admin](https://github.com/EPAV-GAME/epav-admin). O painel permite editar nome, disponibilidade e classificações com histórico obrigatório. Os dois sites compartilham o Firebase `epav-game`; mantenha `firestore.rules` sincronizado entre os repositórios antes de publicar regras do banco.

@@ -16,6 +16,35 @@ export async function productRequest(path, data, { config, token, signal, fetche
   const result = await response.json();
   if (!response.ok) throw new Error(response.status === 401 ? 'LOGIN' : typeof result.detail === 'string' ? result.detail : 'SERVICE');
   if (path === '/v1/recomendacoes' && (!Array.isArray(result.produtos) || result.produtos.length !== 3 || new Set(result.produtos.map(p => p.id)).size !== 3)) throw new Error('SERVICE');
+  if (path === '/v1/recomendacoes' && result.produtos.some(p => !productImageUrl(p.imagem_url))) throw new Error('INSUFFICIENT_PRODUCTS');
   if (path === '/v1/avaliacoes' && (!Number.isInteger(result.score) || result.score < 0 || result.score > 1000 || result.produto_id !== data.produto_id)) throw new Error('SERVICE');
   return result;
+}
+
+// One pending/result entry per browser, shared by preparation and the visible modal.
+// Account changes, different histories and expiration always start a fresh request.
+export function createRecommendationLoader({ tokenProvider, getConfig, fetcher = fetch,
+  onProducts = () => {}, now = Date.now, ttl = 30000 }) {
+  let entry;
+  async function load(context) {
+    const token = await tokenProvider();
+    const payload = JSON.stringify(context);
+    const key = token + ':' + payload;
+    if (entry?.key === key && now() < entry.expires) return entry.promise;
+    entry?.controller.abort();
+    const active = { key, expires: now() + ttl, controller: new AbortController() };
+    entry = active;
+    active.promise = productRequest('/v1/recomendacoes', JSON.parse(payload), {
+      config: getConfig(), token, fetcher, signal: active.controller.signal
+    }).then(result => {
+      if (entry === active) onProducts(result.produtos);
+      return result;
+    }).catch(error => {
+      if (entry === active) entry = undefined;
+      throw error;
+    });
+    return active.promise;
+  }
+  function clear() { entry?.controller.abort(); entry = undefined; }
+  return { load, clear };
 }

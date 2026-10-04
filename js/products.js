@@ -2,16 +2,24 @@
 (() => {
   const $ = id => document.getElementById(id);
   const modal = $('modal-produtos');
-  let session = null, busy = false, controller = null, clientPromise;
-  const client = () => clientPromise ||= import('./product-client.mjs');
+  let session = null, busy = false, controller = null, clientPromise, loaderPromise;
+  const client = () => clientPromise ||= import('./product-client.mjs?v=20261004-fast-products');
+  const loader = () => loaderPromise ||= client().then(api => api.createRecommendationLoader({
+    tokenProvider: () => window.EpavRanking.tokenProdutos(), getConfig: () => window.EPAV_GAME_CONFIG,
+    onProducts: products => products.forEach(product => window.EpavImagens.carregar(product.imagem_url))
+  }));
+  function prepare(context) {
+    loader().then(cache => cache.load(context)).catch(() => {});
+  }
   function status(text) { $('produtos-status').textContent = text; }
   function button(text, action, secondary = false) {
     const element = document.createElement('button'); element.type = 'button';
     element.className = 'botao ' + (secondary ? 'secundario' : 'primario'); element.textContent = text; element.onclick = action;
     return element;
   }
-  function close() {
+  function close({ preservarPreparacao = false } = {}) {
     controller?.abort(); controller = null; session = null; busy = false;
+    if (!preservarPreparacao) loaderPromise?.then(cache => cache.clear());
     modal.hidden = true; modal.inert = false;
     if (!jogoPausado) $('jogo').inert = false;
   }
@@ -30,6 +38,8 @@
     status(login ? 'Entre ou crie uma conta para consultar os produtos e receber a avaliação.'
       : error.message === 'CATALOG_QUOTA_EXCEEDED'
         ? 'O banco de produtos atingiu o limite de consultas. Tente novamente quando ele estiver disponível ou continue sem avaliação.'
+      : error.message === 'INSUFFICIENT_PRODUCTS'
+        ? 'Ainda não há três produtos compatíveis com foto para este atendimento. Tente novamente mais tarde ou continue sem avaliação.'
       : error.message === 'RATE_LIMITED' || error.message === 'GROQ_TEMPORARILY_UNAVAILABLE'
         ? 'O serviço está ocupado. Aguarde um pouco e tente novamente.'
         : 'Não foi possível consultar o serviço agora. Você pode tentar novamente ou continuar sem esta avaliação.');
@@ -44,6 +54,7 @@
     if (url) {
       const image = document.createElement('img'); image.width = 512; image.height = 512;
       image.alt = 'Foto de ' + product.nome; image.decoding = 'async'; image.referrerPolicy = 'no-referrer';
+      image.fetchPriority = 'high';
       image.style.opacity = '0';
       image.onload = () => { placeholder.hidden = true; image.style.opacity = '1'; };
       image.onerror = () => { image.remove(); placeholder.hidden = false; };
@@ -77,7 +88,7 @@
     $('produtos-acoes').replaceChildren(); $('produtos-form').hidden = true;
     status('Buscando três produtos para este atendimento…');
     try {
-      const result = await request('/v1/recomendacoes', active.contexto);
+      const result = await (await loader()).load(active.contexto);
       if (session !== active) return;
       active.produtos = result.produtos;
       cards(result.produtos, await client());
@@ -123,7 +134,7 @@
     $('produtos-acoes').replaceChildren(button('Continuar conversa', () => finish(record)));
   }
   function open(options) {
-    close(); session = options; controller = new AbortController();
+    close({ preservarPreparacao: true }); session = options; controller = new AbortController();
     $('produtos-titulo').textContent = `O que indicar para ${options.cliente.nome}?`;
     $('produtos-contexto').textContent = options.cliente.perfil;
     $('produtos-resultado').hidden = true; $('produtos-form').hidden = true;
@@ -148,5 +159,5 @@
       event.preventDefault(); focusable[event.shiftKey ? focusable.length - 1 : 0]?.focus();
     }
   });
-  window.EpavProdutos = { abrir: open, fechar: close };
+  window.EpavProdutos = { abrir: open, fechar: close, preparar: prepare };
 })();

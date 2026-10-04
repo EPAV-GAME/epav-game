@@ -968,6 +968,11 @@ function renderizarNo() {
   cancelarAcao(temporizadorAvancoDialogo);
   const no = estado.clienteAtual.dialogo[estado.noAtual];
   if (!no) return finalizarAtendimento();
+  if (etapasProdutos[estado.clienteAtual.id] === estado.noAtual
+      && Array.isArray(estado.historicoAtendimento) && !estado.recomendacaoAtendimento?.concluido) {
+    window.EpavProdutos?.preparar({ cliente_id: estado.clienteAtual.id,
+      no_atual: estado.noAtual, historico: [...estado.historicoAtendimento] });
+  }
   const noPreparado = prepararNo(no);
   atualizarFaseAtendimento(no.opcoes[0]?.categoria);
   const balaoVendedor = document.getElementById('balao-vendedor');

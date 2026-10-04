@@ -7,3 +7,4 @@ Thumbs.db
 .env
 .env.local
 js/firebase-config.js
+test-results/

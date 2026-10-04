@@ -968,10 +968,9 @@ function renderizarNo() {
   cancelarAcao(temporizadorAvancoDialogo);
   const no = estado.clienteAtual.dialogo[estado.noAtual];
   if (!no) return finalizarAtendimento();
-  if (etapasProdutos[estado.clienteAtual.id] === estado.noAtual
-      && Array.isArray(estado.historicoAtendimento) && !estado.recomendacaoAtendimento?.concluido) {
-    window.EpavProdutos?.preparar({ cliente_id: estado.clienteAtual.id,
-      no_atual: estado.noAtual, historico: [...estado.historicoAtendimento] });
+  if (categoriaProdutoAtual()
+      && Array.isArray(estado.historicoAtendimento) && !registroProdutoAtual()?.concluido) {
+    window.EpavProdutos?.preparar(contextoProdutoAtual());
   }
   const noPreparado = prepararNo(no);
   atualizarFaseAtendimento(no.opcoes[0]?.categoria);
@@ -990,22 +989,30 @@ function renderizarNo() {
   digitarTexto(document.getElementById('texto-cliente'), noPreparado.texto, () => prepararEscolhaProduto({ ...no, opcoes: noPreparado.opcoes }));
 }
 
-const etapasProdutos = { cliente1: 'd3', cliente2: 'd5', cliente3: 'd7', cliente4: 'd6', cliente5: 'd7' };
+function categoriaProdutoAtual() { return window.EpavMenu.menuStage(estado.clienteAtual,estado.noAtual)?.id || null; }
+function registrosCardapio() { return window.EpavMenu.menuRecords(estado.recomendacaoAtendimento); }
+function registroProdutoAtual() { return registrosCardapio().find(item=>item.categoria===categoriaProdutoAtual() && item.noId===estado.noAtual); }
+function contextoProdutoAtual() { return {cliente_id:estado.clienteAtual.id,no_atual:estado.noAtual,historico:[...estado.historicoAtendimento],categoria:categoriaProdutoAtual()}; }
+function guardarEscolhaProduto(resultado) { estado.recomendacaoAtendimento=window.EpavMenu.saveMenuRecord(estado.recomendacaoAtendimento,resultado); }
+function atualizarResumoCardapio() {
+  const elemento=document.getElementById('produto-indicado');
+  elemento.textContent=window.EpavMenu.menuSummary(estado.recomendacaoAtendimento);
+  elemento.hidden=!elemento.textContent;
+}
 function prepararEscolhaProduto(no) {
   const cliente = estado.clienteAtual;
-  const registro = estado.recomendacaoAtendimento;
+  const registro = registroProdutoAtual();
   if (!window.EpavProdutos || !Array.isArray(estado.historicoAtendimento)
-      || etapasProdutos[cliente.id] !== estado.noAtual || registro?.concluido) return renderizarOpcoes(no);
+      || !categoriaProdutoAtual() || registro?.concluido) return renderizarOpcoes(no);
   window.EpavProdutos.abrir({
     cliente,
-    contexto: { cliente_id: cliente.id, no_atual: estado.noAtual, historico: [...estado.historicoAtendimento] },
+    contexto: contextoProdutoAtual(),
+    cardapio: estado.recomendacaoAtendimento,
     registro,
-    aoAvaliar: resultado => { estado.recomendacaoAtendimento = resultado; salvarProgresso(); },
+    aoAvaliar: resultado => { guardarEscolhaProduto(resultado); salvarProgresso(); },
     aoConcluir: resultado => {
-      estado.recomendacaoAtendimento = { ...resultado, concluido: true };
-      const resumo = document.getElementById('produto-indicado');
-      resumo.hidden = resultado.status !== 'avaliado';
-      resumo.textContent = resultado.status === 'avaliado' ? `Produto indicado: ${resultado.nome} · adequação ${resultado.avaliacao.score}/1000` : '';
+      guardarEscolhaProduto({ ...resultado, concluido: true });
+      atualizarResumoCardapio();
       salvarProgresso(); renderizarOpcoes(no); sincronizarCronometro();
     }
   });
@@ -1520,10 +1527,7 @@ function restaurarAtendimento() {
   document.getElementById('vendedor-dialogo').src = imagemVendedor('parado');
   document.getElementById('nome-falante').textContent = cliente.nome.toUpperCase();
   atualizarFichaEscuta();
-  const recomendacao = estado.recomendacaoAtendimento;
-  const resumoProduto = document.getElementById('produto-indicado');
-  resumoProduto.hidden = recomendacao?.status !== 'avaliado';
-  resumoProduto.textContent = recomendacao?.status === 'avaliado' ? `Produto indicado: ${recomendacao.nome} · adequação ${recomendacao.avaliacao.score}/1000` : '';
+  atualizarResumoCardapio();
   atualizarEstadoConversa();
   atualizarProgressoMissao(true);
   exibirFeedbackDecisao(0, estado.historicoAtendimento === null ? 'Partida restaurada. A nova escolha de produtos estará disponível a partir do próximo atendimento.' : 'Partida restaurada. Continue de onde parou.');

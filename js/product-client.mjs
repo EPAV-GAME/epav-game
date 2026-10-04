@@ -15,7 +15,15 @@ export async function productRequest(path, data, { config, token, signal, fetche
     headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(data) });
   const result = await response.json();
   if (!response.ok) throw new Error(response.status === 401 ? 'LOGIN' : typeof result.detail === 'string' ? result.detail : 'SERVICE');
-  if (path === '/v1/recomendacoes' && (!Array.isArray(result.produtos) || result.produtos.length !== 3 || new Set(result.produtos.map(p => p.id)).size !== 3)) throw new Error('SERVICE');
+  if (path === '/v1/recomendacoes') {
+    const count=result.produtos?.length;
+    if (!Array.isArray(result.produtos) || new Set(result.produtos.map(p=>p.id)).size !== count) throw new Error('SERVICE');
+    if (data.categoria) {
+      if (result.categoria !== data.categoria || result.quantidade_solicitada !== 10 || count > 10 ||
+          !Number.isInteger(result.total_disponiveis) || result.total_disponiveis < count ||
+          count !== Math.min(10,result.total_disponiveis)) throw new Error('SERVICE');
+    } else if (count !== 3) throw new Error('SERVICE');
+  }
   if (path === '/v1/recomendacoes' && result.produtos.some(p => !productImageUrl(p.imagem_url))) throw new Error('INSUFFICIENT_PRODUCTS');
   if (path === '/v1/avaliacoes' && (!Number.isInteger(result.score) || result.score < 0 || result.score > 1000 || result.produto_id !== data.produto_id)) throw new Error('SERVICE');
   return result;

@@ -56,7 +56,11 @@ Defina as repository variables `PASSWORD_RESET_SERVICE_URL` e `TURNSTILE_SITE_KE
 
 ## Escolha de produtos durante a conversa
 
-Cada cliente possui uma etapa de recomendação: Lucas d3, Marina d5, Rafael d7, Camila d6 e André d7. Nessa etapa, o jogo consulta a API independente [epav-product-evaluator](https://github.com/EPAV-GAME/epav-product-evaluator) e filtra os tipos e a ocasião definidos para esse cliente e sorteia três alimentos distintos disponíveis no catálogo Firebase, com foto e ficha. Esse sorteio não usa IA; o Redis compartilha o catálogo de candidatos sem fixar o trio apresentado. O jogador escolhe um produto, informa a quantidade e recebe a avaliação Groq de 0 a 1000 com justificativas. Essa nota aparece como adequação do produto; a pontuação original das respostas continua sendo calculada na escala de 400 pontos.
+Cada atendimento monta uma refeição em cinco etapas: **entrada, prato principal, acompanhamento, bebidas e sobremesa**. Cada categoria oferece dez alimentos distintos disponíveis no Firebase, com foto e ficha. A seleção usa regras por nome/tipo e sorteio, sem IA; prioriza a ocasião do cliente e reaproveita páginas do catálogo no Redis por até 15 minutos.
+
+As escolhas ficam entre as últimas cinco falas do diálogo original: Lucas d2–d6, Marina d3–d7, Rafael d4–d8, Camila d5–d9 e André d6–d10. O jogador indica um produto por categoria, informa a quantidade, recebe a avaliação e continua respondendo às opções originais do atendimento. A próxima avaliação leva as indicações anteriores junto ao diálogo e à ficha de escuta. As fichas são reconstruídas pela API a partir dos IDs no Firebase; não usa nomes ou propriedades enviados pelo jogador.
+
+O painel apresenta as dez opções em duas páginas de cinco, preservando a escolha ao trocar de página. Categorias sem dez alimentos com foto mostram somente o acervo real; uma categoria vazia pode ser pulada sem impedir a conversa. O jogador também pode decidir não sugerir uma categoria. Cada indicação e sua nota são salvas na retomada; uma avaliação já recebida não chama a Groq novamente ao restaurar a partida. A pontuação original das respostas continua na escala de 400 pontos; a adequação de cada alimento usa a escala independente de 0 a 1000.
 
 É necessário entrar ou criar uma conta Firebase para consultar a API. O cronômetro fica parado durante a comparação, autenticação e avaliação. Se o serviço ficar indisponível, o jogador pode tentar novamente ou continuar sem avaliação; o jogo não inventa uma nota. As escolhas anteriores e a avaliação atual são salvas na retomada. Partidas antigas sem histórico detalhado passam a oferecer produtos a partir do próximo atendimento.
 
@@ -64,7 +68,7 @@ O navegador recebe somente campos permitidos da ficha. A conta de serviço Fireb
 
 Verificações: `node --test tests/*.test.mjs`.
 
-A busca dos três produtos começa assim que a fala da etapa de recomendação aparece, enquanto o jogador a lê. O modal reaproveita essa mesma consulta e as fotos já começam a carregar em segundo plano. A preparação dura até 30 segundos e é descartada ao mudar conta, contexto ou sair da etapa. Somente produtos com URL válida de foto entram nas opções; falta de três itens compatíveis é informada ao jogador. O SDK do Firestore só é baixado para publicar uma pontuação, e não para consultar produtos.
+A busca dos três produtos começa assim que a fala da etapa de recomendação aparece, enquanto o jogador a lê. O modal reaproveita essa mesma consulta e as fotos já começam a carregar em segundo plano. A preparação dura até 30 segundos e é descartada ao mudar conta, contexto ou sair da etapa. Somente produtos com URL válida de foto entram nas opções; categorias com menos de dez candidatos são informadas ao jogador. O SDK do Firestore só é baixado para publicar uma pontuação, e não para consultar produtos.
 
 ## Painel administrativo
 

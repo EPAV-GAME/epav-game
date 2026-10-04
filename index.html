@@ -10,7 +10,7 @@
   <link rel="preload" as="image" href="assets/images/optimized/tela-principal-v2-cc9cb060c661.webp" fetchpriority="high">
   <link rel="preconnect" href="https://epav-swift-images.kevinernandes2012.workers.dev" crossorigin>
   <link rel="preconnect" href="https://epav-product-evaluator.kevinernandes2012.workers.dev" crossorigin>
-  <link rel="stylesheet" href="css/style.css?v=20261004-images">
+  <link rel="stylesheet" href="css/style.css?v=20261004-menu">
 </head>
 <body>
   <main id="jogo">
@@ -174,6 +174,7 @@
                 <dl class="tutorial-indicadores">
                   <div><dt>Satisfação e pontos</dt><dd>Suas escolhas influenciam a confiança do cliente e o resultado do atendimento.</dd></div>
                   <div><dt>Ficha de escuta</dt><dd>Guarda as necessidades descobertas para ajudar nas próximas respostas.</dd></div>
+                  <div><dt>Monte a refeição</dt><dd>Entre as falas, indique entrada, principal, acompanhamento, bebida e sobremesa. Compare dez opções com foto por categoria; cada avaliação considera a conversa e o que você já indicou.</dd></div>
                   <div><dt>Tempo restante</dt><dd>Leia com atenção e avance com objetividade. Quando o tempo acaba, o cliente encerra a conversa.</dd></div>
                 </dl>
                 <p class="tutorial-controles">Clique ou toque nas opções. No atendimento, você também pode usar A–D ou 1–4; as setas movem o foco. Clique no balão para completar a fala. Use o botão de pausa ou Escape para parar e retomar a partida.</p>
@@ -410,9 +411,13 @@
     <div class="produtos-painel painel-pixel" role="dialog" aria-modal="true" aria-labelledby="produtos-titulo" aria-describedby="produtos-contexto">
       <header class="produtos-cabecalho"><div><p class="sobretitulo">SUA RECOMENDAÇÃO</p><h2 id="produtos-titulo" tabindex="-1">Escolha um produto</h2></div><button type="button" class="botao secundario" onclick="pausarJogo()" aria-label="Pausar partida">Ⅱ Pausar</button></header>
       <p id="produtos-contexto"></p>
-      <p class="produto-nota">Consulte as três fichas e escolha a opção que atende melhor ao cliente. O cronômetro fica parado durante esta etapa.</p>
+      <ol id="cardapio-etapas" class="cardapio-etapas" aria-label="Etapas da refeição"></ol>
+      <p id="cardapio-escolhas" class="produto-nota"></p>
+      <p class="produto-nota">Compare até 10 opções por categoria e indique um produto por vez, seguindo a conversa. O cronômetro fica parado durante esta etapa.</p>
       <form id="produtos-form" hidden>
         <div id="produtos-lista" class="produtos-lista"></div>
+        <div id="produtos-paginacao" class="produtos-paginacao"></div>
+        <p id="produto-selecionado" class="produto-nota" aria-live="polite"></p>
         <div class="produtos-quantidade"><label>Unidades ou embalagens<input id="produto-unidades" type="number" min="1" max="1000" step="1" value="1" required></label><label>Peso total (kg, se souber)<input id="produto-peso" type="number" min="0.001" max="1000" step="any" placeholder="Opcional"></label></div>
         <button id="produto-confirmar" class="botao primario" type="submit">Recomendar produto</button>
       </form>
@@ -424,9 +429,10 @@
   <script src="js/clientsData.js?v=20260915-1"></script>
   <script src="js/image-assets.js?v=20261004-images"></script>
   <script src="js/preload-images.js?v=20261004-images"></script>
-  <script src="js/game.js?v=20261004-fast-products"></script>
+  <script src="js/menu-flow.js?v=20261004-menu"></script>
+  <script src="js/game.js?v=20261004-menu"></script>
   <script src="js/password-recovery.js?v=20261003-1"></script>
   <script src="js/ranking.js?v=20261004-fast-products"></script>
-  <script src="js/products.js?v=20261004-fast-products"></script>
+  <script src="js/products.js?v=20261004-menu"></script>
 </body>
 </html>

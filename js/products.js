@@ -3,7 +3,10 @@
   const $ = id => document.getElementById(id);
   const modal = $('modal-produtos');
   let session = null, busy = false, controller = null, clientPromise, loaderPromise;
-  const client = () => clientPromise ||= import('./product-client.mjs?v=20261004-fast-products');
+  const client = () => clientPromise ||= import('./product-client.mjs?v=20261004-menu');
+  const menuApi = Promise.resolve(window.EpavMenu);
+  const labels = {entrada:'Entrada',principal:'Prato principal',acompanhamento:'Acompanhamento',bebida:'Bebidas',sobremesa:'Sobremesa'};
+  const categoryIds = Object.keys(labels);
   const loader = () => loaderPromise ||= client().then(api => api.createRecommendationLoader({
     tokenProvider: () => window.EpavRanking.tokenProdutos(), getConfig: () => window.EPAV_GAME_CONFIG,
     onProducts: products => products.forEach(product => window.EpavImagens.carregar(product.imagem_url))
@@ -25,7 +28,8 @@
   }
   function finish(record) {
     const callback = session?.aoConcluir;
-    close(); callback?.(record);
+    const completed = {...record,categoria:session.contexto.categoria};
+    close(); callback?.(completed);
   }
   async function request(path, data) {
     const token = await window.EpavRanking.tokenProdutos();
@@ -39,7 +43,7 @@
       : error.message === 'CATALOG_QUOTA_EXCEEDED'
         ? 'O banco de produtos atingiu o limite de consultas. Tente novamente quando ele estiver disponível ou continue sem avaliação.'
       : error.message === 'INSUFFICIENT_PRODUCTS'
-        ? 'Ainda não há três produtos compatíveis com foto para este atendimento. Tente novamente mais tarde ou continue sem avaliação.'
+        ? 'Ainda não há produtos desta categoria com foto para este atendimento. Tente novamente mais tarde ou continue sem avaliação.'
       : error.message === 'RATE_LIMITED' || error.message === 'GROQ_TEMPORARILY_UNAVAILABLE'
         ? 'O serviço está ocupado. Aguarde um pouco e tente novamente.'
         : 'Não foi possível consultar o serviço agora. Você pode tentar novamente ou continuar sem esta avaliação.');
@@ -54,7 +58,7 @@
     if (url) {
       const image = document.createElement('img'); image.width = 512; image.height = 512;
       image.alt = 'Foto de ' + product.nome; image.decoding = 'async'; image.referrerPolicy = 'no-referrer';
-      image.fetchPriority = 'high';
+      image.loading = 'lazy'; image.fetchPriority = 'low';
       image.style.opacity = '0';
       image.onload = () => { placeholder.hidden = true; image.style.opacity = '1'; };
       image.onerror = () => { image.remove(); placeholder.textContent = 'Não foi possível carregar a foto.'; placeholder.hidden = false; };
@@ -64,10 +68,14 @@
   }
   function cards(products, api) {
     const fragment = document.createDocumentFragment();
-    for (const [index, product] of products.entries()) {
+    const start=(session.pagina || 0)*5;
+    for (const [offset, product] of products.slice(start,start+5).entries()) {
+      const index=start+offset;
       const card = document.createElement('article'); card.className = 'produto-cartao';
       const label = document.createElement('label'); label.className = 'produto-selecao';
-      const radio = document.createElement('input'); radio.type = 'radio'; radio.name = 'produto'; radio.value = product.id; radio.required = true;
+      const radio = document.createElement('input'); radio.type = 'radio'; radio.name = 'produto'; radio.value = product.id;
+      radio.checked=session.escolhido===product.id;
+      radio.onchange=()=>{session.escolhido=product.id;$('produto-selecionado').textContent='Selecionado: '+product.nome;};
       const title = document.createElement('strong'); title.textContent = `${index + 1}. ${product.nome}`;
       label.append(radio, title); card.append(photo(product, api), label);
       const details = document.createElement('details');
@@ -81,20 +89,34 @@
       details.append(summary, fields, note); card.append(details); fragment.append(card);
     }
     $('produtos-lista').replaceChildren(fragment);
+    const page=session.pagina || 0, pages=Math.ceil(products.length/5);
+    const caption=document.createElement('span'); caption.textContent=`Opções ${start+1}–${Math.min(start+5,products.length)} de ${products.length}`;
+    const previous=button('← Anteriores',()=>{session.pagina--;cards(products,api);},true);
+    const next=button('Mais opções →',()=>{session.pagina++;cards(products,api);},true);
+    previous.disabled=page===0;next.disabled=page+1>=pages;
+    $('produtos-paginacao').replaceChildren(previous,caption,next);
   }
   async function load() {
     if (!session || busy) return;
     busy = true; const active = session;
     $('produtos-acoes').replaceChildren(); $('produtos-form').hidden = true;
-    status('Buscando três produtos para este atendimento…');
+    status('Buscando 10 opções de '+labels[active.contexto.categoria].toLowerCase()+'…');
     try {
       const result = await (await loader()).load(active.contexto);
       if (session !== active) return;
       active.produtos = result.produtos;
-      cards(result.produtos, await client());
+      active.pagina=0;active.escolhido=null;
+      $('produto-selecionado').textContent='';
       $('produtos-contexto').textContent = `${active.cliente.perfil} ${result.ficha_escuta.join(' · ')}`;
+      if (!result.produtos.length) {
+        status('Não há '+labels[active.contexto.categoria].toLowerCase()+' com foto no catálogo disponível. Você pode continuar e completar as outras categorias.');
+        $('produtos-acoes').replaceChildren(button('Continuar conversa',()=>finish({noId:active.contexto.no_atual,status:'sem_catalogo'})));
+        return;
+      }
+      cards(result.produtos, await client());
       $('produtos-form').reset(); $('produtos-form').hidden = false;
-      status('Escolha um produto e consulte as fichas antes de recomendar.');
+      status((result.produtos.length<10 ? `Esta categoria tem ${result.produtos.length} opção(ões) com foto no catálogo. ` : '10 opções disponíveis. ')+'Consulte as fichas e recomende um produto para esta parte da refeição.');
+      $('produtos-acoes').replaceChildren(button('Não sugerir esta categoria',()=>finish({noId:active.contexto.no_atual,status:'nao_indicado'}),true));
     } catch (error) { if (session === active && error.name !== 'AbortError') failure(error, load); }
     finally { if (session === active) busy = false; }
   }
@@ -102,16 +124,18 @@
     event?.preventDefault();
     if (!session || busy || !$('produtos-form').reportValidity()) return;
     const active = session;
-    const selected = active.produtos.find(p => p.id === new FormData($('produtos-form')).get('produto'));
-    if (!selected) return;
+    const selected = active.produtos.find(p => p.id === active.escolhido);
+    if (!selected) {status('Selecione um produto antes de recomendar.');return;}
     const quantidade = { unidades: Number($('produto-unidades').value) };
     if ($('produto-peso').value) quantidade.peso_total_kg = Number($('produto-peso').value);
     busy = true; $('produto-confirmar').disabled = true; $('produtos-acoes').replaceChildren();
     status('Avaliando o produto com a conversa e a ficha do cliente…');
     try {
-      const result = await request('/v1/avaliacoes', { ...active.contexto, produto_id: selected.id, quantidade });
+      const api=await menuApi;
+      const result = await request('/v1/avaliacoes', { ...active.contexto, produto_id: selected.id, quantidade,
+        escolhas_anteriores:api.previousMenuChoices(active.cardapio,active.contexto.categoria) });
       if (session !== active) return;
-      active.registro = { noId: active.contexto.no_atual, produtoId: selected.id, nome: selected.nome, quantidade, status: 'avaliado', avaliacao: result };
+      active.registro = { noId: active.contexto.no_atual,categoria:active.contexto.categoria,produtoId: selected.id, nome: selected.nome, quantidade, status: 'avaliado', avaliacao: result };
       // Save before continuing so refresh restores the feedback without another AI request.
       active.aoAvaliar(active.registro);
       showResult(active.registro);
@@ -135,7 +159,19 @@
   }
   function open(options) {
     close({ preservarPreparacao: true }); session = options; controller = new AbortController();
-    $('produtos-titulo').textContent = `O que indicar para ${options.cliente.nome}?`;
+    const category=options.contexto.categoria;
+    $('produtos-titulo').textContent = `${labels[category]} para ${options.cliente.nome}`;
+    const records=options.cardapio?.versao===2 ? options.cardapio.escolhas : [];
+    const steps=document.createDocumentFragment();
+    for (const id of categoryIds) {
+      const li=document.createElement('li'),done=records.find(item=>item.categoria===id && item.concluido);
+      li.textContent=(done ? '✓ ' : '')+labels[id];
+      if(id===category) li.setAttribute('aria-current','step');
+      li.classList.toggle('concluida',!!done);steps.append(li);
+    }
+    $('cardapio-etapas').replaceChildren(steps);
+    const chosen=records.filter(item=>item.status==='avaliado');
+    $('cardapio-escolhas').textContent=chosen.length ? 'Já indicado: '+chosen.map(item=>labels[item.categoria]+': '+item.nome).join(' · ') : 'Monte a refeição aos poucos, considerando o que o cliente contou.';
     $('produtos-contexto').textContent = options.cliente.perfil;
     $('produtos-resultado').hidden = true; $('produtos-form').hidden = true;
     $('produtos-lista').replaceChildren(); $('produtos-acoes').replaceChildren();

@@ -77,3 +77,19 @@ As verificações e o workflow de publicação do painel ficam no repositório `
 ## Cache compartilhado
 
 A consulta pública do ranking usa `GET /v1/ranking` na API `epav-product-evaluator`, com cache Redis de até 30 segundos. Publicar continua gravando no Firebase pelas regras existentes; resultados novos aparecem no ranking após a atualização desse cache. O serviço compartilha também categorias de produtos por 15 minutos e fichas de avaliação por 60 segundos, com invalidação pelo admin e pelo bot. Senhas Redis ficam exclusivamente nos segredos do servidor.
+
+## Carregamento das imagens
+
+Os cenários e personagens usam versões WebP em `assets/images/optimized/`, com nomes derivados do conteúdo para atualizar o cache quando uma imagem mudar. Os 51 arquivos originais somam 64,13 MiB; as versões otimizadas somam 2,89 MiB (95,5% menos bytes). Os originais são preservados para manutenção da arte. Personagens têm até 1024 pixels no maior lado; cenários, até 1920 pixels. A transparência é mantida.
+
+O cenário do menu é pré-carregado com prioridade alta. Depois, duas filas com prioridade baixa carregam e decodificam as demais imagens; entrar em uma tela promove seus arquivos para prioridade alta. Imagens em telas ocultas usam carregamento adiado, e o HTML, o CSS e os personagens dinâmicos compartilham os mesmos caminhos do manifesto. As fotos Swift já chegam do serviço em WebP de 512×512, até 100 KiB, com cache HTTP de um ano em URLs baseadas no conteúdo. A conexão com esse serviço é antecipada no menu.
+
+Após alterar a arte original, regenere as versões e o manifesto:
+
+```powershell
+python -m pip install -r scripts/requirements-images.txt
+python scripts/optimize-images.py
+node --test tests/*.test.mjs
+```
+
+A redução é do tamanho transferido; o tempo de carregamento também depende da conexão e do dispositivo.

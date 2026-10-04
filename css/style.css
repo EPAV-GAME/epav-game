@@ -63,16 +63,16 @@ h1, h2, p { overflow-wrap: anywhere; }
   min-height: 0;
   overflow: hidden;
   padding: clamp(8px, 2dvh, 24px) clamp(14px, 5vw, 72px);
-  background-image: linear-gradient(90deg, rgba(18,48,74,.3), transparent 58%), url('../assets/images/tela-principal-v2.png');
+  background-image: linear-gradient(90deg, rgba(18,48,74,.3), transparent 58%), url('../assets/images/optimized/tela-principal-v2-cc9cb060c661.webp');
 }
-#tela-personalizacao { background-image: linear-gradient(rgba(18,48,74,.28), rgba(18,48,74,.58)), url('../assets/images/tela-principal-v2.png'); }
+#tela-personalizacao { background-image: linear-gradient(rgba(18,48,74,.28), rgba(18,48,74,.58)), url('../assets/images/optimized/tela-principal-v2-cc9cb060c661.webp'); }
 #tela-resultado {
   height: 100vh;
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
   padding: clamp(8px, 2.2vh, 18px) clamp(14px, 4vw, 48px);
-  background-image: url('../assets/images/img2.jpg');
+  background-image: url('../assets/images/optimized/img2-e019031fa7fc.webp');
 }
 #tela-final {
   height: 100vh;
@@ -80,7 +80,7 @@ h1, h2, p { overflow-wrap: anywhere; }
   min-height: 0;
   overflow: hidden;
   padding: clamp(10px, 2.2vh, 22px) clamp(14px, 4vw, 48px);
-  background-image: url('../assets/images/img3.jpg');
+  background-image: url('../assets/images/optimized/img3-46734a5d18d7.webp');
 }
 #tela-menu.ativa, #tela-personalizacao.ativa, #tela-resultado.ativa, #tela-final.ativa { display: flex; align-items: center; }
 .menu-painel { width: min(470px, 100%); margin-block: auto; padding: clamp(28px, 5vw, 48px); }
@@ -115,7 +115,7 @@ h1, h2, p { overflow-wrap: anywhere; }
 #tela-tutorial {
   height: 100vh; height: 100dvh; min-height: 0; overflow: hidden;
   padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-  background: linear-gradient(rgba(18,48,74,.45), rgba(18,48,74,.7)), center/cover url('../assets/images/escritorio-geral.png');
+  background: linear-gradient(rgba(18,48,74,.45), rgba(18,48,74,.7)), center/cover url('../assets/images/optimized/escritorio-geral-5b2e8754db9c.webp');
 }
 .tutorial-wrap { width: min(1080px, 100%); height: 100%; margin: auto; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: clamp(10px, 2dvh, 18px); }
 .tutorial-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -188,7 +188,7 @@ h1, h2, p { overflow-wrap: anywhere; }
 .personalizacao-acoes { display: grid; grid-template-columns: .8fr 1.2fr; gap: 12px; margin-top: 24px; }
 
 /* Escritório */
-#cenario-escritorio { position: relative; width: 100%; height: 100vh; height: 100dvh; min-height: 590px; overflow: hidden; background: center/cover url('../assets/images/escritorio-geral.png'); }
+#cenario-escritorio { position: relative; width: 100%; height: 100vh; height: 100dvh; min-height: 590px; overflow: hidden; background: center/cover url('../assets/images/optimized/escritorio-geral-5b2e8754db9c.webp'); }
 #cenario-escritorio::after { content: ""; position: absolute; inset: auto 0 0; height: 35%; background: linear-gradient(transparent, rgba(18,48,74,.18)); pointer-events: none; }
 .hud-escritorio { position: absolute; z-index: 20; top: 18px; left: 18px; display: flex; gap: 8px; }
 .hud-escritorio > div, .pontos-dialogo { min-width: 112px; padding: 10px 14px; border: 3px solid var(--ink); background: var(--paper); box-shadow: 4px 4px 0 var(--ink); }
@@ -235,7 +235,7 @@ h1, h2, p { overflow-wrap: anywhere; }
 .popup-cliente .interromper { background: #ffcad0; color: #7a1830; }
 
 /* Atendimento */
-#cenario-dialogo { position: relative; min-height: 100vh; min-height: 100dvh; overflow: hidden; background: center/cover url('../assets/images/escritorio-dialogo-v2.png'); }
+#cenario-dialogo { position: relative; min-height: 100vh; min-height: 100dvh; overflow: hidden; background: center/cover url('../assets/images/optimized/escritorio-dialogo-v2-83796b3e37aa.webp'); }
 #cenario-dialogo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 25%, rgba(18,48,74,.2)); }
 .hud-dialogo { position: absolute; z-index: 20; top: 16px; left: 16px; right: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .botao-icone { width: 44px; height: 44px; border: 3px solid var(--ink); background: var(--paper); box-shadow: 3px 3px 0 var(--ink); color: var(--ink); font-size: 25px; font-weight: 900; cursor: pointer; }
@@ -326,7 +326,7 @@ h1, h2, p { overflow-wrap: anywhere; }
 #tela-cutscene.ativa { display: block; }
 #cutscene-cenario {
   position: relative; width: 100%; min-height: 100vh; min-height: 100dvh; padding: clamp(24px, 5vw, 58px);
-  overflow: hidden; text-align: center; background: center/cover url('../assets/images/escritorio-geral.png');
+  overflow: hidden; text-align: center; background: center/cover url('../assets/images/optimized/escritorio-geral-5b2e8754db9c.webp');
 }
 #cutscene-cenario::before { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(18,48,74,.3), rgba(18,48,74,.72)); }
 .cutscene-selo, #cutscene-titulo, #cutscene-narracao, .cutscene-clientes, #cutscene-vendedor, .cutscene-fala, #cutscene-continuar { position: relative; z-index: 2; }

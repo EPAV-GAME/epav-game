@@ -7,14 +7,16 @@
   <link rel="icon" type="image/png" href="assets/images/epav-icone.png">
   <link rel="apple-touch-icon" href="assets/images/epav-icone.png">
   <title>Fechando Negócio — EPAV</title>
-  <link rel="stylesheet" href="css/style.css?v=20261003-tutorial-fit">
+  <link rel="preload" as="image" href="assets/images/optimized/tela-principal-v2-cc9cb060c661.webp" fetchpriority="high">
+  <link rel="preconnect" href="https://epav-swift-images.kevinernandes2012.workers.dev" crossorigin>
+  <link rel="stylesheet" href="css/style.css?v=20261004-images">
 </head>
 <body>
   <main id="jogo">
     <section id="tela-menu" class="tela ativa" aria-labelledby="titulo-jogo">
       <div class="painel menu-painel">
         <div class="marca-menu">
-          <img src="assets/images/epav-logo.png" alt="Logo EPAV" width="54" height="48">
+          <img src="assets/images/optimized/epav-logo-1bd59dfe2711.webp" alt="Logo EPAV" width="54" height="48">
           <p class="sobretitulo">MISSÃO EPAV</p>
         </div>
         <h1 id="titulo-jogo">Fechando<br><span>Negócio</span></h1>
@@ -102,13 +104,13 @@
           <div class="personagens-opcoes">
             <label class="cartao-personagem">
               <input type="radio" name="sexo-vendedor" value="masculino" checked>
-              <span class="personagem-preview"><img src="assets/images/vendedor-parado.png" alt="Personagem masculino com uniforme e braçadeira EPAV"></span>
+              <span class="personagem-preview"><img loading="lazy" decoding="async" src="assets/images/optimized/vendedor-parado-6dd7d3b2d596.webp" alt="Personagem masculino com uniforme e braçadeira EPAV"></span>
               <strong>Masculino</strong>
               <small>Vendedor</small>
             </label>
             <label class="cartao-personagem">
               <input type="radio" name="sexo-vendedor" value="feminino">
-              <span class="personagem-preview"><img src="assets/images/vendedora-parada.png" alt="Personagem feminino com uniforme e braçadeira EPAV"></span>
+              <span class="personagem-preview"><img loading="lazy" decoding="async" src="assets/images/optimized/vendedora-parada-d87cf0580b61.webp" alt="Personagem feminino com uniforme e braçadeira EPAV"></span>
               <strong>Feminino</strong>
               <small>Vendedora</small>
             </label>
@@ -130,7 +132,7 @@
         </header>
         <div class="tutorial-cena">
           <aside class="tutorial-personagem" aria-label="Seu personagem">
-            <img id="tutorial-vendedor" src="assets/images/vendedor-parado.png" alt="Vendedor EPAV">
+            <img loading="lazy" decoding="async" id="tutorial-vendedor" src="assets/images/optimized/vendedor-parado-6dd7d3b2d596.webp" alt="Vendedor EPAV">
             <p class="painel" id="tutorial-boas-vindas"></p>
           </aside>
           <div class="painel tutorial-painel">
@@ -197,7 +199,7 @@
           <button class="botao-icone botao-pausa" onclick="pausarJogo()" aria-label="Pausar partida" title="Pausar partida (Escape)">Ⅱ</button>
         </header>
         <div class="dica-observacao"><span>!</span> Observe o contexto antes de abordar.</div>
-        <img id="vendedor-sprite" src="assets/images/vendedor-parado.png" alt="Vendedor EPAV com braçadeira azul">
+        <img loading="lazy" decoding="async" id="vendedor-sprite" src="assets/images/optimized/vendedor-parado-6dd7d3b2d596.webp" alt="Vendedor EPAV com braçadeira azul">
         <div id="marcadores-clientes"></div>
       </div>
     </section>
@@ -231,8 +233,8 @@
           <span>💡</span><div><small>NECESSIDADE IDENTIFICADA</small><strong id="texto-insight-descoberta"></strong></div>
         </div>
         <div class="palco-personagens">
-          <img id="vendedor-dialogo" src="assets/images/vendedor-parado.png" alt="Vendedor EPAV">
-          <img id="cliente-retrato" src="" alt="Cliente">
+          <img loading="lazy" decoding="async" id="vendedor-dialogo" src="assets/images/optimized/vendedor-parado-6dd7d3b2d596.webp" alt="Vendedor EPAV">
+          <img loading="lazy" decoding="async" id="cliente-retrato" src="" alt="Cliente">
         </div>
         <div class="dialogo-area">
           <div id="balao-fala" class="painel-pixel">
@@ -278,7 +280,7 @@
         <h2 id="cutscene-titulo">Atendimento de verdade!</h2>
         <p id="cutscene-narracao" aria-live="polite"></p>
         <div id="cutscene-clientes" class="cutscene-clientes" aria-label="Os cinco clientes"></div>
-        <img id="cutscene-vendedor" src="assets/images/vendedor-comemorando.png" alt="Vendedor EPAV">
+        <img loading="lazy" decoding="async" id="cutscene-vendedor" src="assets/images/optimized/vendedor-comemorando-02cd34209f91.webp" alt="Vendedor EPAV">
         <div id="cutscene-fala" class="cutscene-fala" aria-live="polite"></div>
         <button id="cutscene-continuar" class="botao primario" onclick="encerrarCutscene()">Ver resultado ▶</button>
         <button class="botao secundario" onclick="pausarJogo()">Ⅱ Pausar</button>
@@ -288,7 +290,7 @@
     <section id="tela-final" class="tela">
       <div class="painel resultado-painel">
         <p class="sobretitulo">MISSÃO CONCLUÍDA</p>
-        <img id="vendedor-final" class="vendedor-final" src="assets/images/vendedor-feliz.png" alt="Vendedor EPAV celebrando">
+        <img loading="lazy" decoding="async" id="vendedor-final" class="vendedor-final" src="assets/images/optimized/vendedor-feliz-047a57724816.webp" alt="Vendedor EPAV celebrando">
         <div class="trofeu">🏆</div>
         <h2 id="classificacao-final"></h2>
         <p id="mensagem-final"></p>
@@ -419,8 +421,9 @@
   </div>
   <script src="js/firebase-config.js"></script>
   <script src="js/clientsData.js?v=20260915-1"></script>
-  <script src="js/preload-images.js?v=20260928-1"></script>
-  <script src="js/game.js?v=20261003-tutorial-fit"></script>
+  <script src="js/image-assets.js?v=20261004-images"></script>
+  <script src="js/preload-images.js?v=20261004-images"></script>
+  <script src="js/game.js?v=20261004-images"></script>
   <script src="js/password-recovery.js?v=20261003-1"></script>
   <script src="js/ranking.js?v=20261003-redis-cache"></script>
   <script src="js/products.js?v=20261003-products2"></script>

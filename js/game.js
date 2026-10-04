@@ -461,19 +461,19 @@ const estadosFemininos = {
 
 function imagemVendedor(expressao = 'parado') {
   if (estado.sexoVendedor === 'feminino') {
-    return `assets/images/vendedora-${estadosFemininos[expressao] || expressao}.png`;
+    return window.EpavImagens.url(`assets/images/vendedora-${estadosFemininos[expressao] || expressao}.png`);
   }
-  return `assets/images/vendedor-${expressao}.png`;
+  return window.EpavImagens.url(`assets/images/vendedor-${expressao}.png`);
 }
 
 function imagemCliente(cliente, reacao = 'neutra') {
   const arquivoReacao = reacao !== 'neutra' ? cliente.reacoes?.[reacao] : null;
-  return `assets/images/${arquivoReacao || cliente.imagem || `${cliente.id}.png`}`;
+  return window.EpavImagens.url(`assets/images/${arquivoReacao || cliente.imagem || `${cliente.id}.png`}`);
 }
 
 function precarregarReacoesCliente(cliente) {
   Object.values(cliente.reacoes || {}).forEach(arquivo => {
-    window.EpavImagens.carregar(`assets/images/${arquivo}`);
+    window.EpavImagens.carregar(`assets/images/${arquivo}`, { prioridade: 'high' });
   });
 }
 
@@ -557,7 +557,7 @@ function digitarTexto(elemento, texto, aoConcluir = () => {}) {
 
 function framesAndandoAtuais() {
   const prefixo = estado.sexoVendedor === 'feminino' ? 'vendedora' : 'vendedor';
-  return [1, 2, 3, 4].map(numero => `assets/images/${prefixo}-andando-${numero}.png`);
+  return [1, 2, 3, 4].map(numero => window.EpavImagens.url(`assets/images/${prefixo}-andando-${numero}.png`));
 }
 
 function embaralharOpcoes(opcoes) {
@@ -608,7 +608,7 @@ function confirmarPersonalizacao(evento) {
 function abrirTutorial(perfil) {
   Object.assign(tutorial, { etapa: 0, observou: false, respondeu: false, perfil });
   const personagem = document.getElementById('tutorial-vendedor');
-  personagem.src = `assets/images/${perfil.sexoVendedor === 'feminino' ? 'vendedora-parada' : 'vendedor-parado'}.png`;
+  personagem.src = window.EpavImagens.url(`assets/images/${perfil.sexoVendedor === 'feminino' ? 'vendedora-parada' : 'vendedor-parado'}.png`);
   personagem.alt = `${perfil.nomeVendedor}, seu personagem EPAV`;
   document.getElementById('tutorial-boas-vindas').textContent = `${perfil.nomeVendedor}, vamos praticar antes de atender?`;
   document.getElementById('tutorial-feedback-observacao').hidden = true;
@@ -705,6 +705,7 @@ function voltarDaAjuda() {
 }
 
 function mostrarTela(id) {
+  window.EpavImagens.priorizarTela(id);
   if (id !== 'tela-dialogo') window.EpavProdutos?.fechar();
   const telaAnterior = document.querySelector('.tela.ativa')?.id;
   if (['tela-escritorio', 'tela-dialogo', 'tela-resultado'].includes(telaAnterior)

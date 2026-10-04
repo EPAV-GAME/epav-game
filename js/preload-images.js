@@ -2,12 +2,21 @@
   // Mantém as imagens carregadas e decodificadas disponíveis durante a partida.
   const cache = new Map();
 
-  function carregar(caminho) {
-    if (cache.has(caminho)) return cache.get(caminho).pronta;
+  function url(caminho) {
+    const nome = caminho.replace(/^assets\/images\//, '');
+    return window.EPAV_IMAGE_ASSETS?.[nome] || caminho;
+  }
+
+  function carregar(caminho, { prioridade = 'low' } = {}) {
+    caminho = url(caminho);
+    if (cache.has(caminho)) {
+      if (prioridade === 'high') cache.get(caminho).imagem.fetchPriority = 'high';
+      return cache.get(caminho).pronta;
+    }
 
     const imagem = new Image();
     imagem.decoding = 'async';
-    imagem.fetchPriority = 'low';
+    imagem.fetchPriority = prioridade;
     const pronta = new Promise(resolve => {
       imagem.onload = async () => {
         try {
@@ -34,7 +43,7 @@
 
   const arquivos = [
     'tela-principal-v2.png', 'escritorio-geral.png', 'escritorio-dialogo-v2.png',
-    'img2.jpg', 'img3.jpg', 'epav-logo.png', 'epav-icone.png',
+    'img2.jpg', 'img3.jpg', 'epav-logo.png',
     'vendedor-parado.png', 'vendedora-parada.png',
     ...clientes.flatMap(cliente => [
       cliente.imagem || `${cliente.id}.png`,
@@ -56,7 +65,30 @@
     while (fila.length) await carregar(fila.shift());
   }
 
-  // Começa no menu, sem bloquear a navegação ou disparar todos os downloads de uma vez.
-  const prontas = Promise.all(Array.from({ length: 4 }, () => processarFila()));
-  window.EpavImagens = { carregar, prontas };
+  const fundos = {
+    'tela-menu': 'tela-principal-v2.png',
+    'tela-personalizacao': 'tela-principal-v2.png',
+    'tela-tutorial': 'escritorio-geral.png',
+    'tela-escritorio': 'escritorio-geral.png',
+    'tela-dialogo': 'escritorio-dialogo-v2.png',
+    'tela-cutscene': 'escritorio-geral.png',
+    'tela-resultado': 'img2.jpg',
+    'tela-final': 'img3.jpg'
+  };
+  function priorizarTela(id) {
+    if (fundos[id]) carregar(`assets/images/${fundos[id]}`, { prioridade: 'high' });
+    document.getElementById(id)?.querySelectorAll('img[src]').forEach(imagem => {
+      carregar(imagem.getAttribute('src'), { prioridade: 'high' });
+    });
+  }
+
+  // O cenário inicial chega primeiro. Só depois duas filas de baixa prioridade
+  // aquecem as próximas telas, sem disputar quatro downloads com a abertura.
+  const prontas = carregar('assets/images/tela-principal-v2.png', { prioridade: 'high' })
+    .then(() => new Promise(resolve => {
+      const iniciar = () => resolve(Promise.all(Array.from({ length: 2 }, () => processarFila())));
+      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(iniciar, { timeout: 1500 });
+      else setTimeout(iniciar, 0);
+    }));
+  window.EpavImagens = { carregar, prontas, url, priorizarTela };
 })();

@@ -49,7 +49,7 @@
   }
   function photo(product, api) {
     const box = document.createElement('div'); box.className = 'produto-foto';
-    const placeholder = document.createElement('span'); placeholder.textContent = 'Foto ainda não disponível'; box.append(placeholder);
+    const placeholder = document.createElement('span'); placeholder.textContent = 'Carregando foto…'; box.append(placeholder);
     const url = api.productImageUrl(product.imagem_url);
     if (url) {
       const image = document.createElement('img'); image.width = 512; image.height = 512;
@@ -57,7 +57,7 @@
       image.fetchPriority = 'high';
       image.style.opacity = '0';
       image.onload = () => { placeholder.hidden = true; image.style.opacity = '1'; };
-      image.onerror = () => { image.remove(); placeholder.hidden = false; };
+      image.onerror = () => { image.remove(); placeholder.textContent = 'Não foi possível carregar a foto.'; placeholder.hidden = false; };
       image.src = url; box.append(image);
     }
     return box;

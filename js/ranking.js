@@ -25,6 +25,8 @@
       'failed-precondition': 'O banco Firestore (default) ainda não está pronto.',
       'unavailable': 'O Firestore está indisponível no momento. Tente novamente mais tarde.'
     };
+    if (erro?.message === 'CATALOG_QUOTA_EXCEEDED') return 'O banco atingiu a cota de consultas. Tente novamente mais tarde.';
+    if (erro?.message === 'CATALOG_BUSY') return 'O ranking está sendo atualizado. Aguarde um pouco e tente novamente.';
     if (erro?.message === 'CONFIG_AUSENTE') return 'Configuração do Firebase não gerada. Consulte o README.';
     if (erro?.code === 'permission-denied') return contexto === 'ranking'
       ? 'As regras atuais do Firestore não permitem ler o ranking. Publique firestore.rules no projeto configurado para o site.'
@@ -228,20 +230,14 @@
     lista.replaceChildren();
     status.textContent = 'Carregando resultados…';
     try {
-      const { db, firestoreSdk } = await carregarServicos();
-      const consulta = firestoreSdk.query(
-        firestoreSdk.collection(db, 'ranking'),
-        firestoreSdk.orderBy('pontos', 'desc'),
-        firestoreSdk.orderBy('tempoJogadoMs', 'asc'),
-        firestoreSdk.limit(20)
-      );
-      const resultados = await firestoreSdk.getDocs(consulta);
-      if (resultados.empty) {
+      await carregarServicos();
+      const { readRanking } = await import('./ranking-client.mjs');
+      const resultados = await readRanking({ config: window.EPAV_FIREBASE_CONFIG, signal: AbortSignal.timeout(40000) });
+      if (!resultados.length) {
         status.textContent = 'Ainda não há partidas publicadas. Você pode inaugurar o ranking!';
         return;
       }
-      resultados.docs.forEach((documento, indice) => {
-        const dados = documento.data();
+      resultados.forEach((dados, indice) => {
         const item = document.createElement('li');
         item.className = 'ranking-item';
         const posicao = document.createElement('span');
@@ -263,7 +259,7 @@
         item.append(posicao, jogador, pontos);
         lista.append(item);
       });
-      status.textContent = `${resultados.size} resultado(s) · maior pontuação, depois menor tempo`;
+      status.textContent = `${resultados.length} resultado(s) · maior pontuação, depois menor tempo · atualização em até 30 segundos`;
     } catch (erro) {
       status.textContent = mensagemErro(erro, 'ranking');
     }

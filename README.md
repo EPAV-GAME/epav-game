@@ -73,3 +73,7 @@ O jogo principal não contém uma área administrativa. Acesse o painel somente 
 As regras permitem consultas de até 100 registros somente a administradores autenticados. O ranking público continua limitado a 25. A permissão deve ser atribuída por uma ferramenta confiável com Firebase Admin SDK; o navegador nunca recebe a chave privada. Publicar no GitHub Pages não publica as regras do Firestore: use o comando de deploy acima quando elas mudarem.
 
 As verificações e o workflow de publicação do painel ficam no repositório `epav-admin`.
+
+## Cache compartilhado
+
+A consulta pública do ranking usa `GET /v1/ranking` na API `epav-product-evaluator`, com cache Redis de até 30 segundos. Publicar continua gravando no Firebase pelas regras existentes; resultados novos aparecem no ranking após a atualização desse cache. O serviço compartilha também categorias de produtos por 15 minutos e fichas de avaliação por 60 segundos, com invalidação pelo admin e pelo bot. Senhas Redis ficam exclusivamente nos segredos do servidor.

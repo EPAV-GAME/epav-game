@@ -634,6 +634,7 @@ function atualizarTutorial() {
   const avancar = document.getElementById('tutorial-avancar');
   avancar.disabled = tutorial.etapa === 0 ? !tutorial.observou : tutorial.etapa === 1 ? !tutorial.respondeu : false;
   avancar.textContent = tutorial.etapa === 2 ? 'Começar missão ▶' : 'Continuar ▶';
+  document.querySelector('.tutorial-conteudo').scrollTop = 0;
   window.scrollTo(0, 0);
   titulo.focus({ preventScroll: true });
 }

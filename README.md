@@ -76,6 +76,8 @@ As regras permitem consultas de até 100 registros somente a administradores aut
 
 As verificações e o workflow de publicação do painel ficam no repositório `epav-admin`.
 
+O dashboard do painel mostra a quantidade e o espaço ocupado pelas fotos no Cloudflare. As regras locais de envio manual de fotos estão preparadas e sincronizadas, mas **não foram publicadas**, por decisão do responsável em 04/10/2026. O envio manual permanece desativado no painel até a autorização e publicação dessas regras. O workflow de Pages não publica regras do Firebase.
+
 ## Cache compartilhado
 
 A consulta pública do ranking usa `GET /v1/ranking` na API `epav-product-evaluator`, com cache Redis de até 30 segundos. Publicar continua gravando no Firebase pelas regras existentes; resultados novos aparecem no ranking após a atualização desse cache. O serviço compartilha também categorias de produtos por 15 minutos e fichas de avaliação por 60 segundos, com invalidação pelo admin e pelo bot. Senhas Redis ficam exclusivamente nos segredos do servidor.

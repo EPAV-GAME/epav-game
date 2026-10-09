@@ -38,8 +38,7 @@
       await loading;
       if (current !== generation) return;
       widget = window.turnstile.render('#recuperacao-verificacao', {
-        // Compact also fits the account dialog after a phone rotates.
-        sitekey: config.turnstileSiteKey, action: 'password-reset', size: 'compact',
+        sitekey: config.turnstileSiteKey, action: 'password-reset', size: 'flexible',
         callback: token => { challenge = token; element('recuperacao-enviar').disabled = busy; },
         'expired-callback': () => { challenge = ''; element('recuperacao-enviar').disabled = true; },
         'error-callback': () => { challenge = ''; element('recuperacao-enviar').disabled = true; status('Não foi possível verificar. Volte ao acesso e tente novamente.', true); },

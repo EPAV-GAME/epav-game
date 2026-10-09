@@ -3,7 +3,8 @@
   const $ = id => document.getElementById(id);
   const modal = $('modal-produtos');
   let session = null, busy = false, controller = null, clientPromise, loaderPromise;
-  const client = () => clientPromise ||= import('./product-client.mjs?v=20261004-menu');
+  const client = () => clientPromise ||= import('./product-client.mjs?v=20261008-editions');
+  const optionCount=window.EPAV_EDITION?.options || 10;
   const menuApi = Promise.resolve(window.EpavMenu);
   const labels = {entrada:'Entrada',principal:'Prato principal',acompanhamento:'Acompanhamento',bebida:'Bebidas',sobremesa:'Sobremesa'};
   const categoryIds = Object.keys(labels);
@@ -100,7 +101,7 @@
     if (!session || busy) return;
     busy = true; const active = session;
     $('produtos-acoes').replaceChildren(); $('produtos-form').hidden = true;
-    status('Buscando 10 opções de '+labels[active.contexto.categoria].toLowerCase()+'…');
+    status('Buscando '+optionCount+' opções de '+labels[active.contexto.categoria].toLowerCase()+'…');
     try {
       const result = await (await loader()).load(active.contexto);
       if (session !== active) return;
@@ -115,7 +116,7 @@
       }
       cards(result.produtos, await client());
       $('produtos-form').reset(); $('produtos-form').hidden = false;
-      status((result.produtos.length<10 ? `Esta categoria tem ${result.produtos.length} opção(ões) com foto no catálogo. ` : '10 opções disponíveis. ')+'Consulte as fichas e recomende um produto para esta parte da refeição.');
+      status((result.produtos.length<optionCount ? `Esta categoria tem ${result.produtos.length} opção(ões) com foto no catálogo. ` : optionCount+' opções disponíveis. ')+'Consulte as fichas e recomende um produto para esta parte da refeição.');
       $('produtos-acoes').replaceChildren(button('Não sugerir esta categoria',()=>finish({noId:active.contexto.no_atual,status:'nao_indicado'}),true));
     } catch (error) { if (session === active && error.name !== 'AbortError') failure(error, load); }
     finally { if (session === active) busy = false; }
@@ -129,7 +130,7 @@
     const quantidade = { unidades: Number($('produto-unidades').value) };
     if ($('produto-peso').value) quantidade.peso_total_kg = Number($('produto-peso').value);
     busy = true; $('produto-confirmar').disabled = true; $('produtos-acoes').replaceChildren();
-    status('Avaliando o produto com a conversa e a ficha do cliente…');
+    status(window.EPAV_EDITION?.id==='sem-ia' ? 'Calculando a pontuação pelas necessidades do cliente…' : 'Avaliando o produto com a conversa e a ficha do cliente…');
     try {
       const api=await menuApi;
       const result = await request('/v1/avaliacoes', { ...active.contexto, produto_id: selected.id, quantidade,
@@ -154,7 +155,8 @@
     }
     $('produto-criterios').replaceChildren(criteria);
     $('produto-faltantes').textContent = record.avaliacao.informacoes_faltantes.length ? 'Ainda é preciso confirmar: ' + record.avaliacao.informacoes_faltantes.join('; ') + '.' : '';
-    status('Avaliação de adequação do produto ao cliente.');
+    status(window.EPAV_EDITION?.evaluation || 'Avaliação de adequação do produto ao cliente.');
+    if(record.avaliacao.perfil_cliente?.descricao) $('produto-faltantes').textContent+=' Perfil considerado: '+record.avaliacao.perfil_cliente.descricao+'.';
     $('produtos-acoes').replaceChildren(button('Continuar conversa', () => finish(record)));
   }
   function open(options) {

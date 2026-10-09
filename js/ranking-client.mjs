@@ -1,4 +1,4 @@
-import { productServiceUrl } from './product-client.mjs';
+import { productServiceUrl } from './product-client.mjs?v=20261008-editions';
 
 export async function readRanking({ config, signal, fetcher = fetch } = {}) {
   const response = await fetcher(productServiceUrl(config) + '/v1/ranking', {

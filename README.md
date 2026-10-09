@@ -1,5 +1,14 @@
 # Fechando Negócio — Missão EPAV
 
+## Versões do projeto
+
+| Versão | Jogo | Avaliação | Opções por categoria |
+|---|---|---|---|
+| Com IA (este repositório) | [Jogar](https://epav-game.github.io/epav-game/) | [API com Groq](https://github.com/EPAV-GAME/epav-product-evaluator) | 10 |
+| Sem IA | [Jogar](https://epav-game.github.io/epav-game-sem-ia/) | [API de regras](https://github.com/EPAV-GAME/epav-rule-evaluator) | 5 |
+
+Os jogos têm progresso e histórico locais separados. Ambos usam a mesma autenticação, fotos e ranking das respostas do diálogo (400 pontos). As avaliações de produtos (0–1000) usam rubricas diferentes e não são diretamente comparáveis. O catálogo e o ranking são compartilhados no Redis; login, gravações e resultados pessoais não são cacheados.
+
 Jogo de atendimento consultivo com progresso e histórico locais. O ranking online é opcional: terminar uma partida **não** a publica automaticamente.
 
 ## Rodar localmente
@@ -56,7 +65,7 @@ Defina as repository variables `PASSWORD_RESET_SERVICE_URL` e `TURNSTILE_SITE_KE
 
 ## Escolha de produtos durante a conversa
 
-Cada atendimento monta uma refeição em cinco etapas: **entrada, prato principal, acompanhamento, bebidas e sobremesa**. Cada categoria oferece dez alimentos distintos disponíveis no Firebase, com foto e ficha. A seleção usa regras por nome/tipo e sorteio, sem IA; prioriza a ocasião do cliente e reaproveita páginas do catálogo no Redis por até 15 minutos.
+Cada atendimento monta uma refeição em cinco etapas: **entrada, prato principal, acompanhamento, bebidas e sobremesa**. Cada categoria oferece dez alimentos distintos disponíveis no Firebase, com foto e ficha. A seleção usa regras por nome/tipo e sorteio, sem IA; prioriza a ocasião do cliente e reaproveita o catálogo compactado no Redis por até 15 minutos. As fichas dos produtos atuais e anteriores saem desse mesmo cache na avaliação, evitando consultas individuais repetidas ao Firebase.
 
 As escolhas ficam entre as últimas cinco falas do diálogo original: Lucas d2–d6, Marina d3–d7, Rafael d4–d8, Camila d5–d9 e André d6–d10. O jogador indica um produto por categoria, informa a quantidade, recebe a avaliação e continua respondendo às opções originais do atendimento. A próxima avaliação leva as indicações anteriores junto ao diálogo e à ficha de escuta. As fichas são reconstruídas pela API a partir dos IDs no Firebase; não usa nomes ou propriedades enviados pelo jogador.
 

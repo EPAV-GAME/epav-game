@@ -21,6 +21,7 @@ const estado = {
   bonusAtendimento: 0,
   fatosDescobertos: [],
   historicoAtendimento: [],
+  alternativasRoteiro: {},
   recomendacaoAtendimento: null,
   ultimaQualidade: 'neutra',
   desempenhoCategorias: {},
@@ -34,8 +35,8 @@ const estado = {
   etapa: 'menu'
 };
 
-const CHAVE_PROGRESSO = 'progressoEpavV5';
-const CHAVES_PROGRESSO_ANTIGAS = ['progressoEpavV4', 'progressoEpavV3'];
+const CHAVE_PROGRESSO = 'progressoEpavRoteirosV2';
+const CHAVES_PROGRESSO_ANTIGAS = [];
 const CHAVE_PERFIL = 'perfilVendedorEpav';
 const tutorial = { etapa: 0, observou: false, respondeu: false, perfil: null };
 let temporizadoresCutscene = [];
@@ -363,6 +364,7 @@ function temFato(chave) {
 
 function prepararNo(no) {
   registrarDescoberta(no.descoberta);
+  if (no.epavV2) return {texto:no.texto,opcoes:window.EpavRoteirosV2.alternativas(no,estado)};
   const retornoAtivo = no.retorno && temFato(no.retorno.chave);
   let texto = no.texto;
   if (estado.ultimaQualidade === 'ruim') {
@@ -931,6 +933,7 @@ function iniciarAtendimento(cliente) {
   estado.bonusAtendimento = 0;
   estado.fatosDescobertos = [];
   estado.historicoAtendimento = [];
+  estado.alternativasRoteiro = {};
   estado.recomendacaoAtendimento = null;
   document.getElementById('produto-indicado').hidden = true;
   estado.ultimaQualidade = 'neutra';
@@ -973,6 +976,7 @@ function renderizarNo() {
     window.EpavProdutos?.preparar(contextoProdutoAtual());
   }
   const noPreparado = prepararNo(no);
+  salvarProgresso();
   atualizarFaseAtendimento(no.opcoes[0]?.categoria);
   const balaoVendedor = document.getElementById('balao-vendedor');
   balaoVendedor.hidden = true;
@@ -986,13 +990,22 @@ function renderizarNo() {
   const container = document.getElementById('opcoes-resposta');
   container.innerHTML = '';
   container.hidden = true;
-  digitarTexto(document.getElementById('texto-cliente'), noPreparado.texto, () => prepararEscolhaProduto({ ...no, opcoes: noPreparado.opcoes }));
+  const falaCliente = () => digitarTexto(document.getElementById('texto-cliente'), noPreparado.texto,
+    () => prepararEscolhaProduto({ ...no, opcoes: noPreparado.opcoes }));
+  if (no.aberturaVendedor && !estado.historicoAtendimento.length) {
+    document.getElementById('texto-cliente').textContent='';
+    balaoVendedor.hidden=false;
+    document.getElementById('nome-vendedor-fala').textContent=estado.nomeVendedor.toUpperCase();
+    digitarTexto(document.getElementById('texto-vendedor-fala'),no.aberturaVendedor,()=>{
+      temporizadorAvancoDialogo=agendarAcao(()=>{balaoVendedor.hidden=true;falaCliente();},400);
+    });
+  } else falaCliente();
 }
 
 function categoriaProdutoAtual() { return window.EpavMenu.menuStage(estado.clienteAtual,estado.noAtual)?.id || null; }
 function registrosCardapio() { return window.EpavMenu.menuRecords(estado.recomendacaoAtendimento); }
 function registroProdutoAtual() { return registrosCardapio().find(item=>item.categoria===categoriaProdutoAtual() && item.noId===estado.noAtual); }
-function contextoProdutoAtual() { return {cliente_id:estado.clienteAtual.id,no_atual:estado.noAtual,historico:[...estado.historicoAtendimento],categoria:categoriaProdutoAtual()}; }
+function contextoProdutoAtual() { return {roteiro:'ia-v2',cliente_id:estado.clienteAtual.id,no_atual:estado.noAtual,historico:[...estado.historicoAtendimento],categoria:categoriaProdutoAtual()}; }
 function guardarEscolhaProduto(resultado) { estado.recomendacaoAtendimento=window.EpavMenu.saveMenuRecord(estado.recomendacaoAtendimento,resultado); }
 function atualizarResumoCardapio() {
   const elemento=document.getElementById('produto-indicado');
@@ -1179,6 +1192,9 @@ function mostrarResultadoAtendimento() {
   const pontosAtendimento = document.getElementById('pontos-atendimento');
   pontosAtendimento.textContent = expulso ? '0 pontos · tempo esgotado' : `+${estado.pontuacaoAtendimento} pontos`;
   pontosAtendimento.classList.toggle('encerrado', expulso);
+  const produtos=registrosCardapio().filter(p=>p.status==='avaliado');
+  const media=produtos.length?Math.round(produtos.reduce((sum,p)=>sum+p.avaliacao.score,0)/produtos.length):null;
+  document.getElementById('notas-produtos').textContent=media===null?'Produtos: não avaliados neste atendimento.':`Produtos: média ${media}/1000 em ${produtos.length} categoria(s). Pontuação independente do diálogo.${produtos.length<5?' Proposta parcial: não é obrigatório concluir a compra.':''}`;
   document.getElementById('forte-atendimento').textContent = avaliacao.forte;
   document.getElementById('cuidado-atendimento').textContent = avaliacao.melhoria;
   document.getElementById('resumo-atendimento').textContent = `${estado.satisfacao}% ${emojiSatisfacao(estado.satisfacao, false)}`;
@@ -1429,6 +1445,7 @@ function salvarProgresso() {
     bonusAtendimento: estado.bonusAtendimento,
     fatosDescobertos: estado.fatosDescobertos,
     historicoAtendimento: estado.historicoAtendimento,
+    alternativasRoteiro: estado.alternativasRoteiro,
     recomendacaoAtendimento: estado.recomendacaoAtendimento,
     ultimaQualidade: estado.ultimaQualidade,
     desempenhoCategorias: estado.desempenhoCategorias,
@@ -1497,6 +1514,7 @@ function continuarPartidaSalva() {
     bonusAtendimento: Number(progresso.bonusAtendimento) || 0,
     fatosDescobertos: Array.isArray(progresso.fatosDescobertos) ? progresso.fatosDescobertos : [],
     historicoAtendimento: Array.isArray(progresso.historicoAtendimento) ? progresso.historicoAtendimento : progresso.noAtual === 'd1' ? [] : null,
+    alternativasRoteiro: progresso.alternativasRoteiro || {},
     recomendacaoAtendimento: progresso.recomendacaoAtendimento || null,
     ultimaQualidade: progresso.ultimaQualidade || 'neutra',
     desempenhoCategorias: progresso.desempenhoCategorias && typeof progresso.desempenhoCategorias === 'object' ? progresso.desempenhoCategorias : {},

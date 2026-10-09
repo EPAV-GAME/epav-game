@@ -838,11 +838,23 @@ function animarChegada() {
   }, 2050);
 }
 
+let marcadorClienteAberto = null;
+
+function abrirContextoCliente(clienteId) {
+  marcadorClienteAberto = clienteId;
+  document.querySelectorAll('.marcador-cliente').forEach(marcador => {
+    const aberto = marcador.dataset.clienteId === clienteId;
+    marcador.classList.toggle('popup-aberto', aberto);
+    marcador.querySelector('.marcador-abrir').setAttribute('aria-expanded', String(aberto));
+  });
+}
+
 function renderizarMarcadores() {
   atualizarIdentidadeVendedor();
   atualizarProgressoMissao(false);
   document.getElementById('pontos-escritorio').textContent = String(estado.pontuacaoTotal).padStart(4, '0');
   const container = document.getElementById('marcadores-clientes');
+  const marcadorComFoco = document.activeElement?.closest('.marcador-cliente')?.dataset.clienteId;
   container.innerHTML = '';
 
   clientes.forEach((cliente, indice) => {
@@ -850,11 +862,20 @@ function renderizarMarcadores() {
     marcador.className = 'marcador-cliente';
     marcador.style.left = `${cliente.x}%`;
     marcador.style.top = `${cliente.y}%`;
-    marcador.tabIndex = 0;
-    marcador.setAttribute('aria-label', `${cliente.nome}, ${cliente.status}`);
+    marcador.dataset.clienteId = cliente.id;
+    const aberto = marcadorClienteAberto === cliente.id;
+    marcador.classList.toggle('popup-aberto', aberto);
+    const abrir = document.createElement('button');
+    abrir.type = 'button';
+    abrir.className = 'marcador-abrir';
+    abrir.setAttribute('aria-label', `${cliente.nome}, ${cliente.status}. Ver contexto`);
+    abrir.setAttribute('aria-expanded', String(aberto));
+    abrir.setAttribute('aria-controls', `contexto-${cliente.id}`);
+    abrir.onclick = () => abrirContextoCliente(marcadorClienteAberto === cliente.id ? null : cliente.id);
     marcador.dataset.situacao = cliente.situacao || 'livre';
     const popup = document.createElement('div');
     popup.className = 'popup-cliente';
+    popup.id = `contexto-${cliente.id}`;
     const observado = estado.clientesObservados.has(cliente.id);
     const rotuloContexto = cliente.rotuloSituacao || (cliente.tempoOcupadoInicial ? 'OCUPADO' : 'DISPONÍVEL');
 
@@ -892,8 +913,16 @@ function renderizarMarcadores() {
         popup.querySelector('button').onclick = () => irParaAtendimento(indice, false);
       }
     }
-    marcador.appendChild(popup);
+    const fechar = document.createElement('button');
+    fechar.type = 'button';
+    fechar.className = 'popup-fechar';
+    fechar.textContent = '×';
+    fechar.setAttribute('aria-label', 'Fechar contexto');
+    fechar.onclick = () => { abrirContextoCliente(null); abrir.focus({ preventScroll: true }); };
+    popup.prepend(fechar);
+    marcador.append(abrir, popup);
     container.appendChild(marcador);
+    if (marcadorComFoco === cliente.id) abrir.focus({ preventScroll: true });
   });
 }
 
@@ -908,6 +937,7 @@ function irParaAtendimento(indice, momentoInadequado = false) {
   const vendedor = document.getElementById('vendedor-sprite');
   const cliente = clientes[indice];
   if (!momentoInadequado && !estado.clientesObservados.has(cliente.id)) return observarCliente(cliente.id);
+  abrirContextoCliente(null);
   precarregarReacoesCliente(cliente);
   estado.momentoInadequado = momentoInadequado;
   vendedor.src = framesAndandoAtuais()[0];

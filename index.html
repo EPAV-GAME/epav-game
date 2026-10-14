@@ -10,7 +10,7 @@
   <link rel="preload" as="image" href="assets/images/optimized/tela-principal-v2-cc9cb060c661.webp" fetchpriority="high">
   <link rel="preconnect" href="https://epav-swift-images.kevinernandes2012.workers.dev" crossorigin>
   <link rel="preconnect" href="https://epav-product-evaluator.kevinernandes2012.workers.dev" crossorigin>
-  <link rel="stylesheet" href="css/style.css?v=20261008-editions">
+  <link rel="stylesheet" href="css/style.css?v=20261014-leitura">
 </head>
 <body>
   <main id="jogo">
@@ -77,7 +77,7 @@
               <h3 id="ajuda-orientacoes">Orientações para o jogador</h3>
               <ul>
                 <li><strong>Controles:</strong> clique ou toque nas respostas. No teclado, use A, B, C e D ou 1, 2, 3 e 4. As setas movem o foco entre as opções.</li>
-                <li><strong>Leitura:</strong> clique no balão para completar uma fala que está aparecendo. Sem opções visíveis, Enter ou espaço também completa a fala.</li>
+                <li><strong>Leitura:</strong> clique no balão para completar uma fala que está aparecendo. Use “Mostrar mensagem inteira” para completar a fala e “Continuar” para avançar após ler. Sem opções visíveis, Enter ou espaço também controla a leitura. O cronômetro fica parado durante a exibição e a confirmação das mensagens.</li>
                 <li><strong>Continuar depois:</strong> o progresso é salvo neste navegador. Use <strong>Continuar partida</strong> no menu para retomar; uma nova partida substitui o progresso anterior.</li>
                 <li><strong>Pausa:</strong> use o botão de pausa ou Escape durante a partida. Os cronômetros e a conversa param até você selecionar <strong>Retomar partida</strong> ou pressionar Escape novamente.</li>
                 <li><strong>Aprender com a prática:</strong> consulte o Histórico para revisar seus resultados e tente melhorar nas próximas missões.</li>
@@ -248,6 +248,7 @@
             <span id="nome-vendedor-fala" class="etiqueta-falante etiqueta-vendedor">VENDEDOR</span>
             <p id="texto-vendedor-fala"></p>
           </div>
+          <button id="botao-leitura" type="button" class="botao secundario" aria-controls="balao-fala balao-vendedor" hidden>Mostrar mensagem inteira</button>
           <div id="feedback-decisao" class="feedback-decisao" aria-live="polite" hidden>
             <strong id="feedback-pontos"></strong><span id="feedback-texto"></span>
           </div>
@@ -434,7 +435,7 @@
   <script src="js/image-assets.js?v=20261004-images"></script>
   <script src="js/preload-images.js?v=20261004-images"></script>
   <script src="js/menu-flow.js?v=20261009-roteiros"></script>
-  <script src="js/game.js?v=20261014-leitura"></script>
+  <script src="js/game.js?v=20261014-leitura-manual"></script>
   <script src="js/password-recovery.js?v=20261003-1"></script>
   <script src="js/ranking.js?v=20261008-editions"></script>
   <script src="js/products.js?v=20261009-roteiros"></script>

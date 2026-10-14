@@ -53,7 +53,7 @@ Após mudar o valor, execute novamente o workflow de publicação para atualizar
 
 Para testar localmente, adicione `TEMPO_ATENDIMENTO_SEGUNDOS=300` ao `.env` e execute novamente `node scripts/build-firebase-config.mjs`.
 
-As mensagens aparecem a 30 ms por caractere, com pausas de 90 ms nas vírgulas e 180 ms no fim das frases. Após a resposta do cliente, há 2,2 segundos para leitura antes de avançar. Clique no balão para completar a fala; a pausa e a preferência de movimento reduzido continuam funcionando.
+As mensagens aparecem a 30 ms por caractere, com pausas na pontuação. Use “Mostrar mensagem inteira” para completar o texto e “Li a mensagem · Continuar” para avançar após ler. As falas de resposta permanecem visíveis até essa confirmação, sem avanço ou rolagem automáticos. O cronômetro de 5 minutos fica parado durante a exibição e a confirmação de leitura e volta nas escolhas de resposta. Pausa, Enter/espaço e movimento reduzido continuam funcionando.
 
 ## Limite de segurança do ranking
 

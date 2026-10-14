@@ -762,3 +762,16 @@ h1, h2, p { overflow-wrap: anywhere; }
   .produtos-cabecalho .botao { font-size: 12px; padding: 8px; min-height: 44px; }
   .produtos-quantidade { grid-template-columns: 1fr; }
 }
+
+/* Leitura: manter as falas visíveis até o jogador avançar. */
+.dialogo-area { max-height: calc(100dvh - 210px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 18px 8px 8px 2px; }
+#balao-fala, #balao-vendedor { background: #fffdf7; }
+#balao-vendedor { border-left: 8px solid var(--teal); }
+#balao-vendedor::after { background: #fffdf7; }
+.dialogo-area:has(#botao-leitura:not([hidden])) .dica-teclado { display: none; }
+#texto-cliente, #texto-vendedor-fala { max-height: none; overflow: visible; font-size: clamp(18px, 1.8vw, 22px); line-height: 1.65; font-weight: 700; color: #172433; }
+#opcoes-resposta { max-height: none; overflow: visible; }
+#opcoes-resposta button { font-size: 16px; line-height: 1.5; }
+#botao-leitura { display: block; width: 100%; margin-top: 12px; min-height: 44px; text-transform: none; font-size: 16px; }
+#botao-leitura[hidden] { display: none; }
+@media (max-height: 540px) { .dialogo-area { max-height: calc(100dvh - 120px); } }

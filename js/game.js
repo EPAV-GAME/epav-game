@@ -43,6 +43,7 @@ let temporizadoresCutscene = [];
 let temporizadorDigitacao = null;
 let elementoDigitacao = null;
 let concluirDigitacaoAtual = null;
+let proximaAcaoLeitura = null;
 let temporizadorAvancoDialogo = null;
 let temporizadorInsight = null;
 let ultimaTentativaId = null;
@@ -207,7 +208,9 @@ function deveContarTempoAtendimento() {
     && document.getElementById('modal-produtos').hidden
     && Boolean(estado.clienteAtual)
     && !estado.atendimentoExpulso
-    && !jogoPausado;
+    && !jogoPausado
+    && !elementoDigitacao
+    && !proximaAcaoLeitura;
 }
 
 function sincronizarTempoAtendimento() {
@@ -511,6 +514,28 @@ function cancelarDigitacao() {
   if (elementoDigitacao) elementoDigitacao.classList.remove('digitando');
   elementoDigitacao = null;
   concluirDigitacaoAtual = null;
+  proximaAcaoLeitura = null;
+  document.getElementById('botao-leitura').hidden = true;
+}
+
+function aguardarLeitura(acao) {
+  proximaAcaoLeitura = acao;
+  const botao = document.getElementById('botao-leitura');
+  botao.textContent = 'Li a mensagem · Continuar ▶';
+  botao.hidden = false;
+  sincronizarTempoAtendimento();
+}
+
+function avancarLeitura() {
+  if (jogoPausado) return false;
+  if (concluirDigitacao()) return true;
+  const acao = proximaAcaoLeitura;
+  if (!acao) return false;
+  proximaAcaoLeitura = null;
+  document.getElementById('botao-leitura').hidden = true;
+  acao();
+  sincronizarTempoAtendimento();
+  return true;
 }
 
 function concluirDigitacao() {
@@ -528,7 +553,13 @@ function digitarTexto(elemento, texto, aoConcluir = () => {}) {
   elementoDigitacao = elemento;
   elemento.textContent = '';
   elemento.scrollTop = 0;
+  const areaLeitura = elemento.closest('.dialogo-area');
+  if (areaLeitura) areaLeitura.scrollTop = 0;
   elemento.classList.add('digitando');
+  const botaoLeitura = document.getElementById('botao-leitura');
+  botaoLeitura.textContent = 'Mostrar mensagem inteira';
+  botaoLeitura.hidden = false;
+  sincronizarTempoAtendimento();
 
   const finalizar = () => {
     if (concluido) return;
@@ -539,7 +570,9 @@ function digitarTexto(elemento, texto, aoConcluir = () => {}) {
     temporizadorDigitacao = null;
     elementoDigitacao = null;
     concluirDigitacaoAtual = null;
+    botaoLeitura.hidden = true;
     aoConcluir();
+    sincronizarTempoAtendimento();
   };
 
   concluirDigitacaoAtual = finalizar;
@@ -548,7 +581,7 @@ function digitarTexto(elemento, texto, aoConcluir = () => {}) {
   const escrever = () => {
     indice += 1;
     elemento.textContent = completo.slice(0, indice);
-    elemento.scrollTop = elemento.scrollHeight;
+    // Keep the start visible; the player scrolls the reading panel when needed.
     if (indice >= completo.length) return finalizar();
     const caractere = completo[indice - 1];
     const pausa = /[.!?]/.test(caractere) ? 180 : /[,;:]/.test(caractere) ? 90 : 30;
@@ -997,7 +1030,7 @@ function renderizarNo() {
     balaoVendedor.hidden=false;
     document.getElementById('nome-vendedor-fala').textContent=estado.nomeVendedor.toUpperCase();
     digitarTexto(document.getElementById('texto-vendedor-fala'),no.aberturaVendedor,()=>{
-      temporizadorAvancoDialogo=agendarAcao(()=>{balaoVendedor.hidden=true;falaCliente();},400);
+      aguardarLeitura(()=>{balaoVendedor.hidden=true;falaCliente();});
     });
   } else falaCliente();
 }
@@ -1104,12 +1137,13 @@ function escolherOpcao(opcao, botao) {
   document.getElementById('nome-vendedor-fala').textContent = estado.nomeVendedor.toUpperCase();
   mostrarPontosFlutuantes(pontos, balaoVendedor);
   digitarTexto(document.getElementById('texto-vendedor-fala'), opcao.texto, () => {
-    temporizadorAvancoDialogo = agendarAcao(() => {
+    aguardarLeitura(() => {
       if (!opcao.resposta) return renderizarNo();
+      document.getElementById('nome-falante').textContent = estado.clienteAtual.nome.toUpperCase();
       digitarTexto(document.getElementById('texto-cliente'), opcao.resposta, () => {
-        temporizadorAvancoDialogo = agendarAcao(renderizarNo, 2200);
+        aguardarLeitura(renderizarNo);
       });
-    }, 900);
+    });
   });
 }
 
@@ -1699,7 +1733,7 @@ document.addEventListener('keydown', evento => {
 
   const botoes = [...document.querySelectorAll('#opcoes-resposta button:not(:disabled)')];
   if (!botoes.length) {
-    if ((evento.key === 'Enter' || evento.key === ' ') && concluirDigitacao()) evento.preventDefault();
+    if ((evento.key === 'Enter' || evento.key === ' ') && avancarLeitura()) evento.preventDefault();
     return;
   }
   const tecla = evento.key.toUpperCase();
@@ -1719,6 +1753,7 @@ document.addEventListener('keydown', evento => {
   botoes[proximo].focus();
 });
 
+document.getElementById('botao-leitura').addEventListener('click', avancarLeitura);
 document.getElementById('balao-fala').addEventListener('click', concluirDigitacao);
 document.getElementById('balao-vendedor').addEventListener('click', concluirDigitacao);
 

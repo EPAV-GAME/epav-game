@@ -183,7 +183,7 @@ function formatarTempoAtendimento(milissegundos) {
 
 function obterLimiteTempoAtendimentoMs() {
   const segundos = window.EPAV_GAME_CONFIG?.tempoAtendimentoSegundos;
-  return Number.isSafeInteger(segundos * 1000) && segundos > 0 ? segundos * 1000 : 140000;
+  return Number.isSafeInteger(segundos * 1000) && segundos > 0 ? segundos * 1000 : 300000;
 }
 
 function tempoAtendimentoAtualMs() {
@@ -551,7 +551,7 @@ function digitarTexto(elemento, texto, aoConcluir = () => {}) {
     elemento.scrollTop = elemento.scrollHeight;
     if (indice >= completo.length) return finalizar();
     const caractere = completo[indice - 1];
-    const pausa = /[.!?]/.test(caractere) ? 75 : /[,;:]/.test(caractere) ? 38 : 13;
+    const pausa = /[.!?]/.test(caractere) ? 180 : /[,;:]/.test(caractere) ? 90 : 30;
     temporizadorDigitacao = agendarAcao(escrever, pausa);
   };
   escrever();
@@ -1107,9 +1107,9 @@ function escolherOpcao(opcao, botao) {
     temporizadorAvancoDialogo = agendarAcao(() => {
       if (!opcao.resposta) return renderizarNo();
       digitarTexto(document.getElementById('texto-cliente'), opcao.resposta, () => {
-        temporizadorAvancoDialogo = agendarAcao(renderizarNo, 850);
+        temporizadorAvancoDialogo = agendarAcao(renderizarNo, 2200);
       });
-    }, 600);
+    }, 900);
   });
 }
 

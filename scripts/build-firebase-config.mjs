@@ -32,11 +32,11 @@ function lerArquivoEnv() {
 }
 
 const arquivoEnv = lerArquivoEnv();
-const tempoInformado = String(process.env.TEMPO_ATENDIMENTO_SEGUNDOS || arquivoEnv.TEMPO_ATENDIMENTO_SEGUNDOS || '140').trim();
+const tempoInformado = String(process.env.TEMPO_ATENDIMENTO_SEGUNDOS || arquivoEnv.TEMPO_ATENDIMENTO_SEGUNDOS || '300').trim();
 const tempoAtendimentoSegundos = Number(tempoInformado);
 if (!/^\d+$/.test(tempoInformado) || tempoAtendimentoSegundos <= 0
     || !Number.isSafeInteger(tempoAtendimentoSegundos * 1000)) {
-  throw new Error('TEMPO_ATENDIMENTO_SEGUNDOS deve ser um número inteiro positivo em segundos, por exemplo 140.');
+  throw new Error('TEMPO_ATENDIMENTO_SEGUNDOS deve ser um número inteiro positivo em segundos, por exemplo 300.');
 }
 const config = Object.fromEntries(Object.entries(nomes).map(([campo, variavel]) => [
   campo, process.env[variavel] || arquivoEnv[variavel] || ''

@@ -47,11 +47,13 @@ O build falha se algum valor faltar, evitando publicar um ranking parcialmente c
 
 ## Configurar o tempo de atendimento
 
-No repositório do GitHub, acesse **Settings → Secrets and variables → Actions → Variables → New repository variable** e crie `TEMPO_ATENDIMENTO_SEGUNDOS` com um número inteiro positivo em segundos. Por exemplo, `140` corresponde a **2 minutos e 20 segundos** para cada cliente.
+No repositório do GitHub, acesse **Settings → Secrets and variables → Actions → Variables → New repository variable** e crie `TEMPO_ATENDIMENTO_SEGUNDOS` com um número inteiro positivo em segundos. Por exemplo, `300` corresponde a **5 minutos** para cada cliente.
 
-Após mudar o valor, execute novamente o workflow de publicação para atualizar o site. Se a variável não estiver definida, o limite padrão é `140` segundos. Os avisos de demora e a expulsão do atendimento acompanham esse limite.
+Após mudar o valor, execute novamente o workflow de publicação para atualizar o site. Se a variável não estiver definida, o limite padrão é `300` segundos. Os avisos de demora e a expulsão do atendimento acompanham esse limite.
 
-Para testar localmente, adicione `TEMPO_ATENDIMENTO_SEGUNDOS=140` ao `.env` e execute novamente `node scripts/build-firebase-config.mjs`.
+Para testar localmente, adicione `TEMPO_ATENDIMENTO_SEGUNDOS=300` ao `.env` e execute novamente `node scripts/build-firebase-config.mjs`.
+
+As mensagens aparecem a 30 ms por caractere, com pausas de 90 ms nas vírgulas e 180 ms no fim das frases. Após a resposta do cliente, há 2,2 segundos para leitura antes de avançar. Clique no balão para completar a fala; a pausa e a preferência de movimento reduzido continuam funcionando.
 
 ## Limite de segurança do ranking
 

@@ -23,6 +23,7 @@ try{
       SELECT r.row_id,${columns.slice(1).map(c=>'f.'+c).join(',')} FROM epav_migration.current_documents d
       JOIN epav_data.records r USING(collection_path,document_id)
       JOIN epav_migration.document_fields f ON f.document_row_id=d.row_id`);
+    await db.query(await readFile(new URL('../migrations/004-ranking-500.sql',import.meta.url),'utf8'));
     // The source ranking may be empty, but existing entries must also migrate.
     const {rows}=await db.query(`SELECT d.document_id,jsonb_object_agg(f.field_name,coalesce(to_jsonb(f.string_value),to_jsonb(f.integer_value))) AS data
       FROM epav_migration.current_documents d JOIN epav_migration.document_fields f ON f.document_row_id=d.row_id

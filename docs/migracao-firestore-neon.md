@@ -7,9 +7,10 @@ Branch de testes: `br-lucky-star-za2fy0sm` (`epav-firestore-migration`).
 ## Destino dos dados
 
 - `epav_migration`: snapshots completos, documentos e campos tipados para conferir e preservar a origem.
-- `epav_data.records` e `record_fields`: registros operacionais do catálogo, importações, auditoria, arquivos recuperáveis e sincronização de fotos.
-- `epav_data.ranking`: colunas próprias para resultados dos jogadores.
-- `epav_data.products`: view com os campos públicos necessários ao jogo.
+- `epav_data.produtos_swift`, `arquivo_produtos_swift`, `auditoria_catalogo`, `importacoes_catalogo`, `sincronizacao_imagens_swift` e `ranking`: tabelas próprias para cada coleção.
+- Fotos, dados originais da planilha e versões históricas ficam em tabelas relacionadas por chaves estrangeiras.
+- `epav_data.records` e `record_fields`: compatibilidade tipada com os valores exatos da origem. Um gatilho adiado sincroniza as tabelas de negócio na mesma transação das gravações da API.
+- `epav_data.products`: view pública, agora atendida pelas tabelas de produtos, fotos e dados originais.
 
 Não há colunas TEXT, JSON ou JSONB. Números, datas, bytes, referências, mapas, listas e valores nulos conservam seus tipos. JSON só aparece no transporte de parâmetros e nas respostas HTTP.
 
@@ -23,12 +24,15 @@ Edições de produto e auditoria são atômicas e exigem a revisão que o painel
 
 ## Procedimento reproduzível
 
-1. Testar `001`, `002` e `003` na branch de testes e conferir os tipos e a reconstrução dos campos.
+1. Testar as migrações `001` a `005` na branch de testes e conferir os tipos e a reconstrução dos campos.
 2. Pausar a sincronização, impedir gravações dos clientes no Firestore e fazer a leitura final consistente.
 3. Importar e conferir a cópia: `node scripts/migrate-firestore-to-neon.mjs apply --production`. O arquivo indicado por `EPAV_MIGRATION_ENV_FILE` precisa conter a branch de produção e suas conexões; a credencial de leitura Google fica fora do Git.
 4. Ativar a cópia operacional: `node scripts/activate-data.mjs <arquivo-local-de-conexao> --production`. O script compara todos os campos antes de confirmar a transação e não sobrescreve uma base operacional existente.
-5. Configurar o usuário limitado e os segredos pelo script `configure-runtime.mjs` deste repositório. O arquivo de saída de conexões deve ser ignorado pelo Git e nunca publicado com o site.
-6. Publicar a API, os dois jogos e o painel; publicar o robô atualizado e retomar seu agendamento.
-7. Exportar apenas a estrutura e os totais: `node scripts/export-schema.mjs <arquivo-local-de-conexao> --production`. Nenhum registro individual vai para o site de modelagem.
+5. Aplicar as tabelas por coleção: `node scripts/apply-collection-model.mjs <arquivo-local-de-conexao> --production`. O script confere as cinco coleções com os registros tipados e o ranking, compara o catálogo público e testa a atualização atômica com rollback.
+6. Configurar o usuário limitado e os segredos pelo script `configure-runtime.mjs` deste repositório. O arquivo de saída de conexões deve ser ignorado pelo Git e nunca publicado com o site.
+7. Publicar a API, os dois jogos e o painel; publicar o robô atualizado e retomar seu agendamento.
+8. Exportar apenas a estrutura e os totais: `node scripts/export-schema.mjs <arquivo-local-de-conexao> --production`. Nenhum registro individual vai para o site de modelagem.
 
 Os arquivos locais de conexão e tokens não são versionados. Não remover o Firestore antigo nem os snapshots após o corte: permanecem como backup. As regras do Firestore negam acessos dos clientes; contas de serviço antigas devem ser retiradas dos serviços que não precisam mais delas.
+
+A tabela `sincronizacao_imagens_swift` mantém o identificador de origem mesmo se o produto foi arquivado. Sua referência opcional ao produto ativo fica nula após a remoção. A auditoria segue a mesma regra; suas versões históricas permanecem preservadas. UIDs do Firebase são identidades externas e não exigem uma tabela de senhas ou usuários no Postgres.

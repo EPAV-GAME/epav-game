@@ -4,7 +4,6 @@
 
   const versaoSdk = '12.18.0';
   let servicosPromise = null;
-  let bancoPromise = null;
   let usuario = null;
   let tentativaPendente = null;
   let publicando = false;
@@ -23,20 +22,14 @@
       'auth/too-many-requests': 'Muitas tentativas. Aguarde um pouco e tente novamente.',
       'auth/network-request-failed': 'Não foi possível conectar. Confira sua internet e tente novamente.',
       'auth/unauthorized-domain': 'O domínio deste site precisa ser autorizado no Firebase Authentication.',
-      'failed-precondition': 'O banco Firestore (default) ainda não está pronto.',
-      'unavailable': 'O Firestore está indisponível no momento. Tente novamente mais tarde.'
+
     };
     if (erro?.message === 'CATALOG_QUOTA_EXCEEDED') return 'O banco atingiu a cota de consultas. Tente novamente mais tarde.';
     if (erro?.message === 'CATALOG_BUSY') return 'O ranking está sendo atualizado. Aguarde um pouco e tente novamente.';
     if (erro?.message === 'CONFIG_AUSENTE') return 'Configuração do Firebase não gerada. Consulte o README.';
-    if (erro?.code === 'permission-denied') return contexto === 'ranking'
-      ? 'As regras atuais do Firestore não permitem ler o ranking. Publique firestore.rules no projeto configurado para o site.'
-      : 'O Firestore recusou a publicação. Confira as regras do banco.';
-    if (erro?.code === 'failed-precondition' && contexto === 'ranking')
-      return 'O Firestore ou o índice de desempate ainda não está pronto. Confira o banco e publique os índices.';
     if (erro?.code && mensagens[erro.code]) return mensagens[erro.code];
     if (!navigator.onLine) return 'Sem conexão. O jogo local continua disponível; tente novamente quando estiver online.';
-    return 'Não foi possível conectar ao ranking. Confira a configuração do Firebase e tente novamente.';
+    return 'Não foi possível conectar ao ranking. Tente novamente em instantes.';
   }
 
   function statusConta(texto, tipo = '') {
@@ -75,14 +68,6 @@
       throw erro;
     });
     return servicosPromise;
-  }
-
-  async function carregarBanco() {
-    if (!bancoPromise) bancoPromise = carregarServicos().then(async ({ app }) => {
-      const firestoreSdk = await import(`https://www.gstatic.com/firebasejs/${versaoSdk}/firebase-firestore.js`);
-      return { db: firestoreSdk.getFirestore(app), firestoreSdk };
-    }).catch(erro => { bancoPromise = null; throw erro; });
-    return bancoPromise;
   }
 
   function atualizarContaUI() {
@@ -201,18 +186,14 @@
     atualizarContaUI();
     statusConta('Publicando sua partida…');
     try {
-      const { db, firestoreSdk } = await carregarBanco();
-      await firestoreSdk.setDoc(firestoreSdk.doc(db, 'ranking', usuario.uid), {
-        uid: usuario.uid,
-        nome: tentativa.nome,
-        pontos: tentativa.pontos,
-        qualidadeQuartos: tentativa.qualidadeQuartos,
-        satisfacao: tentativa.satisfacao,
-        classificacao: tentativa.classificacao,
-        tempoJogadoMs: tentativa.tempoJogadoMs,
-        publicadoEm: firestoreSdk.serverTimestamp(),
-        versao: 2
+      const response = await fetch('https://epav-product-evaluator.kevinernandes2012.workers.dev/v1/ranking', {
+        method: 'POST', redirect: 'error', signal: AbortSignal.timeout(40000),
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await usuario.getIdToken() },
+        body: JSON.stringify({ nome: tentativa.nome, pontos: tentativa.pontos,
+          qualidadeQuartos: tentativa.qualidadeQuartos, satisfacao: tentativa.satisfacao,
+          classificacao: tentativa.classificacao, tempoJogadoMs: tentativa.tempoJogadoMs })
       });
+      if (!response.ok) throw new Error('RANKING_UNAVAILABLE');
       marcarTentativaPublicada(tentativa.id, usuario.uid);
       tentativaPendente = null;
       elemento('modal-conta').hidden = true;

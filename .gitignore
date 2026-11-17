@@ -9,3 +9,7 @@ Thumbs.db
 js/firebase-config.js
 test-results/
 .projects/
+.neon
+.env.neon-migration
+
+.env.neon-runtime

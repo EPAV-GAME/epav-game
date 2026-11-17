@@ -17,7 +17,7 @@ Jogo de atendimento consultivo com progresso e histórico locais. O ranking onli
 2. Execute `node scripts/build-firebase-config.mjs` na raiz do projeto.
 3. Sirva a pasta por HTTP, por exemplo com `python -m http.server 8000`, e abra `http://localhost:8000`.
 
-O arquivo gerado `js/firebase-config.js` é ignorado pelo Git. Configuração de app Web do Firebase contém identificadores **públicos**, mesmo quando fornecida via GitHub Secrets; no site publicado ela sempre será visível ao navegador. A proteção real depende de Authentication e das regras do Firestore.
+O arquivo gerado `js/firebase-config.js` é ignorado pelo Git. Configuração de app Web do Firebase contém identificadores **públicos**, mesmo quando fornecida via GitHub Secrets; no site publicado ela sempre será visível ao navegador. O Firebase cuida da autenticação; as permissões dos dados são verificadas pela API no servidor.
 
 ## Preparar o Firebase na conta do responsável
 
@@ -25,12 +25,12 @@ O site publicado utiliza o projeto `epav-game`. Na [console do Firebase](https:/
 
 1. Confirme que o projeto e o app Web `epav-game` pertencem a essa conta.
 2. Em **Authentication → Sign-in method**, habilite **E-mail/senha**. Em **Settings → Authorized domains**, inclua o domínio de publicação `epav-game.github.io` e `localhost` para testes locais, se necessário.
-3. Em **Firestore Database**, crie o banco **`(default)`**, se ainda não existir. Escolha a região com cuidado; ela não pode ser alterada depois.
-4. Publique as regras e o índice de desempate deste repositório: `firebase deploy --only firestore --project epav-game` após autenticar o Firebase CLI na conta proprietária. Aguarde o índice ficar pronto antes de abrir o ranking. Não deixe o banco em modo de teste aberto.
+3. O catálogo e o ranking são atendidos pela API no Cloudflare, conectada ao PostgreSQL no Neon.
+4. As conexões do Postgres ficam somente no servidor. O navegador usa o token Firebase para publicar no ranking.
 
 O cadastro e login usam e-mail e senha, sem etapa de verificação por e-mail. As regras permitem listar até 25 resultados e escrever somente na posição do próprio usuário autenticado. Cada conta ocupa uma posição; uma nova publicação substitui a anterior. O e-mail nunca é gravado no ranking.
 
-O tempo é contado enquanto a missão está ativa (escritório, diálogo e resumo de atendimento), pausando no menu, em modais e quando a aba fica em segundo plano. Ele é salvo junto com a partida e continua de onde parou quando ela é retomada. O ranking ordena por **mais pontos** e, em empate, por **menos tempo**. Partidas antigas, que não têm tempo registrado, continuam no histórico local, mas precisam ser jogadas novamente para publicação nesta versão. Registros antigos do Firestore sem o campo de tempo não aparecem na nova consulta até serem substituídos por uma publicação atualizada.
+O tempo é contado enquanto a missão está ativa (escritório, diálogo e resumo de atendimento), pausando no menu, em modais e quando a aba fica em segundo plano. Ele é salvo junto com a partida e continua de onde parou quando ela é retomada. O ranking ordena por **mais pontos** e, em empate, por **menos tempo**. Partidas antigas, que não têm tempo registrado, continuam no histórico local, mas precisam ser jogadas novamente para publicação nesta versão.
 
 ## Publicar com GitHub Actions
 
@@ -79,15 +79,17 @@ O navegador recebe somente campos permitidos da ficha. A conta de serviço Fireb
 
 Verificações: `node --test tests/*.test.mjs`.
 
-A busca dos três produtos começa assim que a fala da etapa de recomendação aparece, enquanto o jogador a lê. O modal reaproveita essa mesma consulta e as fotos já começam a carregar em segundo plano. A preparação dura até 30 segundos e é descartada ao mudar conta, contexto ou sair da etapa. Somente produtos com URL válida de foto entram nas opções; categorias com menos de dez candidatos são informadas ao jogador. O SDK do Firestore só é baixado para publicar uma pontuação, e não para consultar produtos.
+A busca dos três produtos começa assim que a fala da etapa de recomendação aparece, enquanto o jogador a lê. O modal reaproveita essa mesma consulta e as fotos já começam a carregar em segundo plano. A preparação dura até 30 segundos e é descartada ao mudar conta, contexto ou sair da etapa. Somente produtos com URL válida de foto entram nas opções; categorias com menos de dez candidatos são informadas ao jogador. O navegador carrega somente os módulos Firebase de aplicativo e autenticação; a publicação da pontuação também passa pela API PostgreSQL.
 
 ## Painel administrativo
 
-O catálogo de produtos agora possui um painel independente em [EPAV Admin](https://epav-game.github.io/epav-admin/), com código em [EPAV-GAME/epav-admin](https://github.com/EPAV-GAME/epav-admin). O painel permite editar nome, disponibilidade e classificações com histórico obrigatório. Os dois sites compartilham o Firebase `epav-game`; mantenha `firestore.rules` sincronizado entre os repositórios antes de publicar regras do banco.
+A migração do Firestore para o Postgres está documentada em [Migração para Neon](docs/migracao-firestore-neon.md).
+
+O catálogo de produtos agora possui um painel independente em [EPAV Admin](https://epav-game.github.io/epav-admin/), com código em [EPAV-GAME/epav-admin](https://github.com/EPAV-GAME/epav-admin). O painel permite editar nome, disponibilidade e classificações com histórico obrigatório. Os sites usam Firebase Authentication e compartilham os dados no PostgreSQL por meio da API. O Firestore antigo está bloqueado para clientes e preservado como cópia de segurança.
 
 O jogo principal não contém uma área administrativa. Acesse o painel somente pelo endereço independente acima, com uma conta que tenha a custom claim `admin: true` no Firebase Authentication. Nenhuma senha ou chave de conta de serviço faz parte do site ou deste repositório.
 
-As regras permitem consultas de até 100 registros somente a administradores autenticados. O ranking público continua limitado a 25. A permissão deve ser atribuída por uma ferramenta confiável com Firebase Admin SDK; o navegador nunca recebe a chave privada. Publicar no GitHub Pages não publica as regras do Firestore: use o comando de deploy acima quando elas mudarem.
+A API verifica `admin: true` no Firebase antes de qualquer operação do painel. As edições de catálogo e sua auditoria são gravadas na mesma transação PostgreSQL. A atribuição da permissão administrativa continua no Firebase Authentication.
 
 As verificações e o workflow de publicação do painel ficam no repositório `epav-admin`.
 

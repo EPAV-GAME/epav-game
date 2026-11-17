@@ -85,7 +85,7 @@ A busca dos três produtos começa assim que a fala da etapa de recomendação a
 
 A migração do Firestore para o Postgres está documentada em [Migração para Neon](docs/migracao-firestore-neon.md).
 
-O catálogo de produtos agora possui um painel independente em [EPAV Admin](https://epav-game.github.io/epav-admin/), com código em [EPAV-GAME/epav-admin](https://github.com/EPAV-GAME/epav-admin). O painel permite editar nome, disponibilidade e classificações com histórico obrigatório. Os sites usam Firebase Authentication e compartilham os dados no PostgreSQL por meio da API. O Firestore antigo está bloqueado para clientes e preservado como cópia de segurança.
+O catálogo de produtos agora possui um painel independente em [EPAV Admin](https://epav-game.github.io/epav-admin/), com código em [EPAV-GAME/epav-admin](https://github.com/EPAV-GAME/epav-admin). O painel permite editar nome, disponibilidade e classificações com histórico obrigatório. Os sites usam Firebase Authentication e compartilham os dados no PostgreSQL por meio da API. Os registros antigos do Firestore foram excluídos após a migração conferida para o PostgreSQL.
 
 O jogo principal não contém uma área administrativa. Acesse o painel somente pelo endereço independente acima, com uma conta que tenha a custom claim `admin: true` no Firebase Authentication. Nenhuma senha ou chave de conta de serviço faz parte do site ou deste repositório.
 

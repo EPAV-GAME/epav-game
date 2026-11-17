@@ -1,38 +1,41 @@
-# Migração Firestore → PostgreSQL (Neon)
+# Dados EPAV no PostgreSQL
 
-Projeto Neon: `small-meadow-02162774`, organização `org-super-voice-51320341`.
-Branch de produção: `br-little-thunder-za0v0lnz`.
-Branch de testes: `br-lucky-star-za2fy0sm` (`epav-firestore-migration`).
+Projeto Neon `small-meadow-02162774`, organização `org-super-voice-51320341`. A aplicação usa a branch `production` (`br-little-thunder-za0v0lnz`).
 
-## Destino dos dados
+## Estrutura atual
 
-- `epav_migration`: snapshots completos, documentos e campos tipados para conferir e preservar a origem.
-- `epav_data.produtos_swift`, `arquivo_produtos_swift`, `auditoria_catalogo`, `importacoes_catalogo`, `sincronizacao_imagens_swift` e `ranking`: tabelas próprias para cada coleção.
-- Fotos, dados originais da planilha e versões históricas ficam em tabelas relacionadas por chaves estrangeiras.
-- `epav_data.records` e `record_fields`: compatibilidade tipada com os valores exatos da origem. Um gatilho adiado sincroniza as tabelas de negócio na mesma transação das gravações da API.
-- `epav_data.products`: view pública, agora atendida pelas tabelas de produtos, fotos e dados originais.
+O banco de produção possui somente o esquema funcional `epav_data`, com 11 tabelas.
 
-Não há colunas TEXT, JSON ou JSONB. Números, datas, bytes, referências, mapas, listas e valores nulos conservam seus tipos. JSON só aparece no transporte de parâmetros e nas respostas HTTP.
+| Tabela | Uso no sistema |
+|---|---|
+| produtos_swift | Catálogo ativo, classificação, disponibilidade e revisão |
+| produtos_swift_dados_originais | Dados comerciais e classificações da planilha |
+| produtos_swift_imagens | Foto R2, dimensões, tamanho, hashes e origem |
+| produtos_swift_versoes | Estados históricos de produtos editados ou arquivados |
+| versoes_produtos_dados_originais | Dados da planilha em cada versão histórica |
+| versoes_produtos_imagens | Foto correspondente a cada versão histórica |
+| arquivo_produtos_swift | Motivo de remoção e referência à versão recuperável |
+| auditoria_catalogo | Administrador, data e versões antes/depois de uma edição |
+| importacoes_catalogo | Origem e verificação da importação |
+| sincronizacao_imagens_swift | Última verificação, ETag, hash e URL consultada pelo robô |
+| ranking | Resultados publicados pelos jogadores |
 
-Firebase Authentication continua responsável por contas, tokens, recuperação de senha e permissão `admin`. As fotos permanecem no Cloudflare R2. Redis mantém o catálogo público comprimido por 900 segundos e o ranking por 30 segundos. Publicar pontuação não invalida o catálogo de produtos.
+A view `products` entrega apenas os campos públicos do catálogo. Não há colunas TEXT, JSON ou JSONB. As respostas e parâmetros HTTP usam JSON transitório. Revisões, datas e dados da aplicação ficam nas próprias tabelas relacionais.
 
-## Aplicações
+A API de dados versão 3 lê e grava diretamente essas tabelas. Edição e auditoria são atômicas. Arquivamentos verificam as revisões do produto e do registro canônico. Restauração recusa substituir um produto existente. Fotos administrativas continuam protegidas contra alterações do robô.
 
-A API `epav-product-evaluator` acessa o Neon com uma conta limitada ao esquema operacional. A API sem IA reutiliza esse catálogo pelo binding existente. Os jogos publicam resultados pela API. O painel usa rotas administrativas paginadas com verificação do token e da permissão em cada operação. O robô usa um segredo próprio, sem chave privada Firebase.
+## Firebase e armazenamento de fotos
 
-Edições de produto e auditoria são atômicas e exigem a revisão que o painel leu. Arquivamentos do robô guardam a cópia e removem o produto na mesma transação, verificando também a revisão do registro canônico. Fotos manuais são preservadas.
+Os 5.646 documentos antigos do Firestore foram excluídos em 17/11/2026 a pedido do responsável. A consulta de coleções confirmou o banco vazio. As regras recusam leitura e gravação pelos clientes. O Firebase Authentication atende contas, tokens, permissões administrativas e recuperação de senha.
 
-## Procedimento reproduzível
+As fotos ficam no Cloudflare R2. Redis mantém catálogo e ranking em cache. As credenciais ficam nos segredos dos serviços e fora dos arquivos publicados pelo site.
 
-1. Testar as migrações `001` a `005` na branch de testes e conferir os tipos e a reconstrução dos campos.
-2. Pausar a sincronização, impedir gravações dos clientes no Firestore e fazer a leitura final consistente.
-3. Importar e conferir a cópia: `node scripts/migrate-firestore-to-neon.mjs apply --production`. O arquivo indicado por `EPAV_MIGRATION_ENV_FILE` precisa conter a branch de produção e suas conexões; a credencial de leitura Google fica fora do Git.
-4. Ativar a cópia operacional: `node scripts/activate-data.mjs <arquivo-local-de-conexao> --production`. O script compara todos os campos antes de confirmar a transação e não sobrescreve uma base operacional existente.
-5. Aplicar as tabelas por coleção: `node scripts/apply-collection-model.mjs <arquivo-local-de-conexao> --production`. O script confere as cinco coleções com os registros tipados e o ranking, compara o catálogo público e testa a atualização atômica com rollback.
-6. Configurar o usuário limitado e os segredos pelo script `configure-runtime.mjs` deste repositório. O arquivo de saída de conexões deve ser ignorado pelo Git e nunca publicado com o site.
-7. Publicar a API, os dois jogos e o painel; publicar o robô atualizado e retomar seu agendamento.
-8. Exportar apenas a estrutura e os totais: `node scripts/export-schema.mjs <arquivo-local-de-conexao> --production`. Nenhum registro individual vai para o site de modelagem.
+## Migrações e conferência
 
-Os arquivos locais de conexão e tokens não são versionados. Não remover o Firestore antigo nem os snapshots após o corte: permanecem como backup. As regras do Firestore negam acessos dos clientes; contas de serviço antigas devem ser retiradas dos serviços que não precisam mais delas.
+As migrações `001` a `007` documentam as etapas históricas de cópia e compatibilidade. Seus objetos temporários foram removidos da produção. As migrações `008` e `009` encerram o suporte genérico e implementam o acesso relacional direto. Os esquemas `epav_internal` e `epav_migration` não existem na produção.
 
-A tabela `sincronizacao_imagens_swift` mantém o identificador de origem mesmo se o produto foi arquivado. Sua referência opcional ao produto ativo fica nula após a remoção. A auditoria segue a mesma regra; suas versões históricas permanecem preservadas. UIDs do Firebase são identidades externas e não exigem uma tabela de senhas ou usuários no Postgres.
+O script `direct-storage.mjs` aplica `prepare` em uma branch isolada, compara os 5.646 documentos com a reconstrução pelas tabelas relacionais e testa gravação, revisão desatualizada, auditoria, arquivamento e restauração com rollback. Códigos numéricos e datas são normalizados na comparação. Os testes foram repetidos em produção.
+
+Após `prepare`, publicar a API com `versao_dados=3` e verificar seus endpoints. Depois executar `finalize` para excluir suporte, gatilhos e rotinas antigas. Não executar novamente os importadores históricos na produção concluída.
+
+O exportador `export-schema.mjs` verifica todas as tabelas do banco e recusa publicar se encontrar estruturas fora do modelo funcional. O site recebe apenas colunas, chaves, índices e contagens. A branch de testes e a branch de backup `epav-before-schema-cleanup-20261117` são cópias isoladas e não são usadas pela aplicação.

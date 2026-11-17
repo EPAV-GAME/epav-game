@@ -23,8 +23,7 @@ try{
     const url=new URL(env.DATABASE_URL);url.username=role;url.password=password;
     runtime={DATABASE_URL:url.href,DATA_SYNC_TOKEN:randomBytes(48).toString('base64url')};
   }
-  await db.query(`GRANT USAGE ON SCHEMA epav_data,epav_migration TO ${role}`);
-  await db.query(`GRANT USAGE ON TYPE epav_migration.firestore_kind TO ${role}`);
+  await db.query(`GRANT USAGE ON SCHEMA epav_data TO ${role}`);
   await db.query(`GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA epav_data TO ${role}`);
   await db.query(`GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA epav_data TO ${role}`);
   await db.query(`GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA epav_data TO ${role}`);
@@ -37,6 +36,6 @@ try{
   const api=resolve(process.argv[4]);
   run(process.execPath,['node_modules/wrangler/bin/wrangler.js','secret','bulk','--profile','epav'],JSON.stringify(runtime),api);
   run('gh',['secret','set','DATA_SYNC_TOKEN','--repo','EPAV-GAME/epav-swift-images'],runtime.DATA_SYNC_TOKEN);
-  console.log('Application role and Cloudflare/GitHub runtime secrets configured. Snapshot tables remain inaccessible to the role.');
+  console.log('Application role and Cloudflare/GitHub runtime secrets configured. The role uses only the application tables.');
 }catch(e){await db.query('ROLLBACK').catch(()=>{});console.error('Configuration failed:',e.code??e.message);process.exitCode=1;}
 finally{await db.end();}

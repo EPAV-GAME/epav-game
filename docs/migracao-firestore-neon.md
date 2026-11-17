@@ -4,7 +4,7 @@ Projeto Neon `small-meadow-02162774`, organização `org-super-voice-51320341`. 
 
 ## Estrutura atual
 
-O banco de produção possui somente o esquema funcional `epav_data`, com 11 tabelas.
+O banco de produção possui somente o esquema funcional `epav_data`, com 10 tabelas.
 
 | Tabela | Uso no sistema |
 |---|---|
@@ -16,7 +16,6 @@ O banco de produção possui somente o esquema funcional `epav_data`, com 11 tab
 | versoes_produtos_imagens | Foto correspondente a cada versão histórica |
 | arquivo_produtos_swift | Motivo de remoção e referência à versão recuperável |
 | auditoria_catalogo | Administrador, data e versões antes/depois de uma edição |
-| importacoes_catalogo | Origem e verificação da importação |
 | sincronizacao_imagens_swift | Última verificação, ETag, hash e URL consultada pelo robô |
 | ranking | Resultados publicados pelos jogadores |
 
@@ -39,3 +38,9 @@ O script `direct-storage.mjs` aplica `prepare` em uma branch isolada, compara os
 Após `prepare`, publicar a API com `versao_dados=3` e verificar seus endpoints. Depois executar `finalize` para excluir suporte, gatilhos e rotinas antigas. Não executar novamente os importadores históricos na produção concluída.
 
 O exportador `export-schema.mjs` verifica todas as tabelas do banco e recusa publicar se encontrar estruturas fora do modelo funcional. O site recebe apenas colunas, chaves, índices e contagens. A branch de testes e a branch de backup `epav-before-schema-cleanup-20261117` são cópias isoladas e não são usadas pela aplicação.
+
+## Remoção dos metadados da importação
+
+A migração `010` exclui `importacoes_catalogo`, `importacao_id` e `linha_origem` dos produtos ativos e das versões históricas. A API deixa de disponibilizar a coleção de importações e o painel deixa de mostrar essa aba e as referências à linha da planilha. Auditoria de edições e arquivamento recuperável continuam em uso nas operações atuais.
+
+O script `remove-import-history.mjs` compara os documentos funcionais antes e depois da mudança, descontando apenas os campos explicitamente removidos. Confere o catálogo público e testa escrita, conflitos, auditoria, arquivamento e restauração na mesma transação, revertendo os dados de teste. O inventário recusa tabelas e campos de importação fora do modelo atual.
